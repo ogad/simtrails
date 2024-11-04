@@ -1,0 +1,469 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>simtrails.sensitivity_test &mdash; Simtrails  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Simtrails
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../usage/installation.html">Installation and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../detectables.html">Detectables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../imagers.html">Imagers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../detectors.html">Detectors and Sensitivity Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sensitivity_result.html">Sensitivity test results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../radiative_transfer.html">Radiative Transfer and lookup tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../detection_algorithms.html">Contrail Detection Algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mannstein.html">Mannstein line-filtering algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cocip.html">CoCiP Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../misc.html">Miscellaneous</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Simtrails</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">simtrails.sensitivity_test</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for simtrails.sensitivity_test</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
+
+<span class="kn">from</span> <span class="nn">simtrails.contrail_detector</span> <span class="kn">import</span> <span class="n">ContrailDetector</span>
+<span class="kn">from</span> <span class="nn">simtrails.detectable</span> <span class="kn">import</span> <span class="n">Detectable</span>
+<span class="kn">from</span> <span class="nn">simtrails.sensitivity_result</span> <span class="kn">import</span> <span class="n">SensitivityResult</span>
+
+
+<div class="viewcode-block" id="InstanceGenerator">
+<a class="viewcode-back" href="../../detectors.html#simtrails.sensitivity_test.InstanceGenerator">[docs]</a>
+<span class="k">class</span> <span class="nc">InstanceGenerator</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class that generates instances based on a given generator class and parameters.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        generator_class (callable): The generator class or function used to generate instances.</span>
+<span class="sd">        **kwargs: Additional keyword arguments to be passed to the generator class.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If the generator_class is not callable but kwargs were passed.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The generated instance.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">generator_class</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generator_class</span> <span class="o">=</span> <span class="n">generator_class</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_kwargs</span> <span class="o">=</span> <span class="n">kwargs</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generator_class</span><span class="p">)</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;InstanceGenerator </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">generator_class</span><span class="si">}</span><span class="s2"> is not callable, but kwargs were passed.&quot;</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate an instance based on the given parameters.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            **kwargs: Additional keyword arguments to be passed to the generator class.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the generator_class is not callable but kwargs were passed.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The generated instance.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generator_class</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">kwargs</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;InstanceGenerator </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">generator_class</span><span class="si">}</span><span class="s2"> is not callable, but kwargs were passed.&quot;</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator_class</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator_class</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">base_kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">})</span>
+
+<div class="viewcode-block" id="InstanceGenerator.get_variations">
+<a class="viewcode-back" href="../../detectors.html#simtrails.sensitivity_test.InstanceGenerator.get_variations">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_variations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate variations of instances based on the given parameter values.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            values (dict[str, Iterable]): A dictionary of parameter names and their corresponding values.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            variations_kwargs (list[dict]): A list of dictionaries containing the variations of parameter values.</span>
+<span class="sd">            variations (list): A list of generated instances with different parameter values.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">values</span> <span class="o">==</span> <span class="p">{}:</span>
+            <span class="k">return</span> <span class="p">{},</span> <span class="p">[</span><span class="bp">self</span><span class="p">()]</span>
+
+        <span class="n">parameters</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+        <span class="n">parameters_coords</span> <span class="o">=</span> <span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">values</span><span class="p">[</span><span class="n">parameter</span><span class="p">]</span> <span class="k">for</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">])</span>
+        <span class="n">parameters_coords</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">parameters_coords</span><span class="p">))</span>
+
+        <span class="n">n_scenes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">parameters_coords</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">variations_kwargs</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nb">dict</span><span class="p">(</span>
+                <span class="nb">zip</span><span class="p">(</span>
+                    <span class="n">parameters</span><span class="p">,</span>
+                    <span class="p">[</span><span class="n">parameter_coords</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">parameter_coords</span> <span class="ow">in</span> <span class="n">parameters_coords</span><span class="p">],</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_scenes</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="n">variations</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="p">(</span><span class="o">**</span><span class="n">variation_kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">variation_kwargs</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">variations_kwargs</span><span class="p">)</span>
+        <span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">variations_kwargs</span><span class="p">,</span> <span class="n">variations</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="CDASensitivityTest">
+<a class="viewcode-back" href="../../detectors.html#simtrails.sensitivity_test.CDASensitivityTest">[docs]</a>
+<span class="k">class</span> <span class="nc">CDASensitivityTest</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class representing a sensitivity test for contrail detection.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        detector_generator (InstanceGenerator | Callable[..., ContrailDetector] | ContrailDetector):</span>
+<span class="sd">            Generator or callable that produces instances of ContrailDetector.</span>
+<span class="sd">        detectable_generator (InstanceGenerator | Callable[..., Detectable] | Detectable):</span>
+<span class="sd">            Generator or callable that produces instances of Detectable.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">detector_generator</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">InstanceGenerator</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">ContrailDetector</span><span class="p">]</span> <span class="o">|</span> <span class="n">ContrailDetector</span>
+        <span class="p">),</span>
+        <span class="n">detectable_generator</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">InstanceGenerator</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Detectable</span><span class="p">]</span> <span class="o">|</span> <span class="n">Detectable</span>
+        <span class="p">),</span>
+        <span class="n">cda_properties</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{},</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detector_generator</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">detector_generator</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">detector_generator</span><span class="p">,</span> <span class="n">InstanceGenerator</span><span class="p">)</span>
+            <span class="k">else</span> <span class="n">InstanceGenerator</span><span class="p">(</span><span class="n">detector_generator</span><span class="p">,</span> <span class="o">**</span><span class="n">cda_properties</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detectable_generator</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">detectable_generator</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">detectable_generator</span><span class="p">,</span> <span class="n">InstanceGenerator</span><span class="p">)</span>
+            <span class="k">else</span> <span class="n">InstanceGenerator</span><span class="p">(</span><span class="n">detectable_generator</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="c1"># self.parameter = parameter</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_contrail_mask</span><span class="p">(</span>
+        <span class="n">detector</span><span class="p">:</span> <span class="n">ContrailDetector</span><span class="p">,</span> <span class="n">scene</span><span class="p">:</span> <span class="n">Detectable</span><span class="p">,</span> <span class="n">pbar</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">detector</span><span class="o">.</span><span class="n">contrail_mask</span><span class="p">(</span><span class="n">scene</span><span class="p">,</span> <span class="n">pbar</span><span class="o">=</span><span class="n">pbar</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_contrail_agg</span><span class="p">(</span>
+        <span class="n">detector</span><span class="p">:</span> <span class="n">ContrailDetector</span><span class="p">,</span>
+        <span class="n">scene</span><span class="p">:</span> <span class="n">Detectable</span><span class="p">,</span>
+        <span class="n">agg</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+        <span class="n">repeats</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">pbar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">return_vals</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">agg</span><span class="p">(</span><span class="n">detector</span><span class="o">.</span><span class="n">contrail_mask</span><span class="p">(</span><span class="n">scene</span><span class="p">,</span> <span class="n">pbar</span><span class="o">=</span><span class="n">pbar</span><span class="p">))</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">repeats</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="n">scene</span><span class="o">.</span><span class="n">clear_memory</span><span class="p">()</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">return_vals</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_optical_depth</span><span class="p">(</span>
+        <span class="n">detector</span><span class="p">:</span> <span class="n">ContrailDetector</span><span class="p">,</span> <span class="n">scene</span><span class="p">:</span> <span class="n">Detectable</span><span class="p">,</span> <span class="n">pbar</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Calculating an optical depth...&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">scene</span><span class="o">.</span><span class="n">max_optical_depth</span><span class="p">(</span><span class="n">detector</span><span class="o">.</span><span class="n">imager</span><span class="p">,</span> <span class="mi">13</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_run_sensitivity_detection</span><span class="p">(</span>
+        <span class="n">scenes</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Detectable</span><span class="p">],</span>
+        <span class="n">detectors</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ContrailDetector</span><span class="p">],</span>
+        <span class="n">agg</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">,</span>
+        <span class="n">n_repeats</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">pbar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">record_optical_depth</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># Think this is deactivated</span>
+        <span class="n">n_proc</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">pathos.pools</span> <span class="kn">import</span> <span class="n">ProcessPool</span>
+
+        <span class="n">outputs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">optical_depths</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">inherit_pbar</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">pbar</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">len_pbar</span> <span class="o">=</span> <span class="n">detectors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">n_steps</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">scenes</span><span class="p">)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">detectors</span><span class="p">)</span>
+            <span class="n">pbar</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="n">len_pbar</span><span class="p">)</span>
+            <span class="n">inherit_pbar</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Creating product of detectors and scenes....&quot;</span><span class="p">)</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">product</span><span class="p">(</span><span class="n">detectors</span><span class="p">,</span> <span class="n">scenes</span><span class="p">,</span> <span class="p">[</span><span class="n">agg</span><span class="p">],</span> <span class="p">[</span><span class="n">n_repeats</span><span class="p">]))</span>
+        <span class="k">del</span> <span class="n">detectors</span><span class="p">,</span> <span class="n">scenes</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting multiprocessing....&quot;</span><span class="p">)</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">ProcessPool</span><span class="p">(</span><span class="n">n_proc</span><span class="p">)</span>
+        <span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+
+        <span class="n">outputs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">with</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">))</span> <span class="k">as</span> <span class="n">pbar</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">imap</span><span class="p">(</span><span class="n">_star_contrail_agg</span><span class="p">,</span> <span class="n">points</span><span class="p">):</span>
+                <span class="n">outputs</span> <span class="o">+=</span> <span class="p">[</span><span class="n">output</span><span class="p">]</span>
+                <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">record_optical_depth</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+
+            <span class="n">optical_depths</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+                <span class="n">tqdm</span><span class="p">(</span>
+                    <span class="n">p</span><span class="o">.</span><span class="n">imap</span><span class="p">(</span><span class="n">_star_optical_depth</span><span class="p">,</span> <span class="n">points</span><span class="p">),</span>
+                    <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">),</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Finished multiprocessing.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">inherit_pbar</span><span class="p">:</span>
+            <span class="n">pbar</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">record_optical_depth</span>
+        <span class="p">):</span>  <span class="c1"># Think this won&#39;t feed in well to repeats any more i.e. is deactivated</span>
+            <span class="k">return</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">optical_depths</span>
+
+        <span class="k">return</span> <span class="n">outputs</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">],</span> <span class="n">agg</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">,</span> <span class="n">pbar</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SensitivityResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Perform the sensitivity test on the given values.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            values (dict[str, Iterable]): A dictionary of input values.</span>
+<span class="sd">            agg (callable, optional): The aggregation function to apply. Defaults to np.sum.</span>
+<span class="sd">            pbar (object, optional): A progress bar object. Defaults to None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Any: The result of the sensitivity test.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">repeats</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">agg</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CDASensitivityTest.repeats">
+<a class="viewcode-back" href="../../detectors.html#simtrails.sensitivity_test.CDASensitivityTest.repeats">[docs]</a>
+    <span class="k">def</span> <span class="nf">repeats</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">values</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">],</span>
+        <span class="n">agg</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">,</span>
+        <span class="n">n_proc</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+        <span class="n">record_optical_depth</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># Think this is deactivated</span>
+        <span class="o">**</span><span class="n">kw_attrs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SensitivityResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run multiple repeats of the sensitivity test.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            n (int): Number of repeats.</span>
+<span class="sd">            values (dict[str, Iterable]): Dictionary of parameter values to vary.</span>
+<span class="sd">            agg (callable, optional): Aggregation function to apply to the results. Defaults to np.sum.</span>
+<span class="sd">            n_proc (int, optional): Number of processes to use for parallel execution. Defaults to 4.</span>
+<span class="sd">            record_optical_depth (bool, optional): Whether to record optical depth. Defaults to False.</span>
+<span class="sd">            **kw_attrs: Additional keyword arguments.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            SensitivityResult: Result of the sensitivity test.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">simtrails.sensitivity_result</span> <span class="kn">import</span> <span class="n">SensitivityResult</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Running </span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2"> repeats of sensitivity test with </span><span class="si">{</span><span class="n">n_proc</span><span class="si">}</span><span class="s2"> processes.&quot;</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">values</span> <span class="o">==</span> <span class="p">{}:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No values passed to sensitivity test.&quot;</span><span class="p">)</span>
+        <span class="c1"># if &quot;resolution&quot; not in values.keys():</span>
+        <span class="c1">#     values[&quot;resolution&quot;] = np.array([0.5])</span>
+
+        <span class="n">detector_parameters</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;resolution&quot;</span><span class="p">,</span> <span class="s2">&quot;noise_equiv_temp_diff&quot;</span><span class="p">,</span> <span class="s2">&quot;nedt&quot;</span><span class="p">]</span>
+
+        <span class="n">scene_values</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">key</span><span class="p">:</span> <span class="n">val</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">values</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">detector_parameters</span>
+        <span class="p">}</span>
+
+        <span class="n">detector_values</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">key</span><span class="p">:</span> <span class="n">val</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">values</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">scene_values</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="p">}</span>
+
+        <span class="c1"># If there are too many scenes, should  split into chunks...</span>
+        <span class="n">n_scenes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">scene_values</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">scene_values</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">detector_parameters</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running </span><span class="si">{</span><span class="n">n_scenes</span><span class="si">}</span><span class="s2"> scenes.&quot;</span><span class="p">)</span>
+
+        <span class="n">variations_coords</span><span class="p">,</span> <span class="n">varied_scenes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">detectable_generator</span><span class="o">.</span><span class="n">get_variations</span><span class="p">(</span>
+            <span class="n">scene_values</span>
+        <span class="p">)</span>
+        <span class="n">imager_coords</span><span class="p">,</span> <span class="n">varied_detectors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">detector_generator</span><span class="o">.</span><span class="n">get_variations</span><span class="p">(</span>
+            <span class="n">detector_values</span>
+        <span class="p">)</span>
+
+        <span class="n">ordered_parameters</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">detector_values</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span> <span class="o">+</span> <span class="nb">sorted</span><span class="p">(</span>
+            <span class="nb">list</span><span class="p">(</span><span class="n">scene_values</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;resolution&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">values</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">values</span><span class="p">[</span><span class="s2">&quot;resolution&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span><span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">varied_detectors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imager</span><span class="o">.</span><span class="n">channels</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span><span class="o">.</span><span class="n">resolution</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">ordered_parameters</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;resolution&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">ordered_parameters</span>
+        <span class="k">if</span> <span class="s2">&quot;length&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">values</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">values</span><span class="p">[</span><span class="s2">&quot;length&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">varied_scenes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">length</span><span class="p">])</span>
+            <span class="n">ordered_parameters</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;length&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">ordered_parameters</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Running </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">varied_detectors</span><span class="p">)</span><span class="si">}</span><span class="s2"> detectors over </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">varied_scenes</span><span class="p">)</span><span class="si">}</span><span class="s2"> scenes.&quot;</span>
+        <span class="p">)</span>
+
+        <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_sensitivity_detection</span><span class="p">(</span>
+            <span class="n">varied_scenes</span><span class="p">,</span>
+            <span class="n">varied_detectors</span><span class="p">,</span>
+            <span class="n">agg</span><span class="p">,</span>
+            <span class="n">n_repeats</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
+            <span class="n">pbar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">record_optical_depth</span><span class="o">=</span><span class="n">record_optical_depth</span><span class="p">,</span>
+            <span class="n">n_proc</span><span class="o">=</span><span class="n">n_proc</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">SensitivityResult</span><span class="o">.</span><span class="n">from_multiprocessed_repeats</span><span class="p">(</span>
+            <span class="n">ordered_parameters</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="o">*</span><span class="n">results</span><span class="p">,</span> <span class="o">**</span><span class="n">kw_attrs</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<span class="k">def</span> <span class="nf">single_contrail_length</span><span class="p">(</span><span class="n">mask</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">.mannstein</span> <span class="kn">import</span> <span class="n">get_pixel_length</span>
+    <span class="kn">from</span> <span class="nn">scipy.ndimage</span> <span class="kn">import</span> <span class="n">label</span>
+
+    <span class="n">labels</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">label</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">structure</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="n">mask</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="n">mask</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="s2">&quot;WARNING: multiple contrails detected in single_contrail_length. Measure first contrail only.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span> <span class="o">=</span> <span class="p">(</span><span class="n">labels</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()</span>
+
+    <span class="n">length</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_pixel_length</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">avg_size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">length</span>
+
+
+<span class="k">def</span> <span class="nf">_star_contrail_agg</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">CDASensitivityTest</span><span class="o">.</span><span class="n">_contrail_agg</span><span class="p">(</span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_star_optical_depth</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">CDASensitivityTest</span><span class="o">.</span><span class="n">_optical_depth</span><span class="p">(</span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Oliver Driver.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

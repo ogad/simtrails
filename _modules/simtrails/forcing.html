@@ -1,0 +1,393 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>simtrails.forcing &mdash; Simtrails  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Simtrails
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../usage/installation.html">Installation and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../detectables.html">Detectables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../imagers.html">Imagers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../detectors.html">Detectors and Sensitivity Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sensitivity_result.html">Sensitivity test results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../radiative_transfer.html">Radiative Transfer and lookup tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../detection_algorithms.html">Contrail Detection Algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mannstein.html">Mannstein line-filtering algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cocip.html">CoCiP Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../misc.html">Miscellaneous</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Simtrails</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">simtrails.forcing</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for simtrails.forcing</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">simtrails.atmosphere</span> <span class="kn">import</span> <span class="n">Atmosphere</span>
+
+<span class="n">standard_atmosphere</span> <span class="o">=</span> <span class="n">Atmosphere</span><span class="p">(</span>
+    <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;data&quot;</span> <span class="o">/</span> <span class="s2">&quot;atmospheres&quot;</span> <span class="o">/</span> <span class="s2">&quot;afglus.dat&quot;</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="get_tau">
+<a class="viewcode-back" href="../../misc.html#simtrails.forcing.get_tau">[docs]</a>
+<span class="k">def</span> <span class="nf">get_tau</span><span class="p">(</span><span class="n">iwp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iwc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">eff_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_ice</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">_</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the optical depth (tau) of ice particles in the atmosphere.</span>
+
+<span class="sd">    To combine with radiative_transfer.get_optical_depth().</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    iwp (float): Ice water path in g/m^2 (default: None)</span>
+<span class="sd">    iwc (float): Ice water content in g/m^3 (default: None)</span>
+<span class="sd">    depth (float): Thickness of ice layer in meters (default: None)</span>
+<span class="sd">    eff_radius (float): Effective radius of ice particles in micrometers (default: None)</span>
+<span class="sd">    n_ice (float): Number concentration of ice particles in cm^-3 (default: None)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    float: Optical depth (tau) of ice particles in the atmosphere.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">logging</span>
+    <span class="kn">from</span> <span class="nn">simtrails.misc.microphysics</span> <span class="kn">import</span> <span class="n">sph_particle_radius</span>
+
+    <span class="k">if</span> <span class="n">iwp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">iwp</span> <span class="o">=</span> <span class="n">iwc</span> <span class="o">*</span> <span class="n">depth</span> <span class="o">*</span> <span class="mf">1e3</span>  <span class="c1"># g/m^2</span>
+    <span class="k">elif</span> <span class="n">iwc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">depth</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Ignoring iwc and depth, using iwp instead&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">eff_radius</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">eff_radius</span> <span class="o">=</span> <span class="n">sph_particle_radius</span><span class="p">(</span><span class="n">iwp</span><span class="p">,</span> <span class="n">n_ice</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e6</span>  <span class="c1"># um</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">eff_radius</span> <span class="o">*</span> <span class="mf">1e-6</span>  <span class="c1"># m</span>
+    <span class="n">rho_ice</span> <span class="o">=</span> <span class="mf">0.917e6</span>  <span class="c1"># g/m^3</span>
+    <span class="k">return</span> <span class="mi">2</span> <span class="o">/</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">iwp</span> <span class="o">/</span> <span class="p">(</span><span class="n">rho_ice</span> <span class="o">*</span> <span class="n">r</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="atm_stf_blz">
+<a class="viewcode-back" href="../../misc.html#simtrails.forcing.atm_stf_blz">[docs]</a>
+<span class="k">def</span> <span class="nf">atm_stf_blz</span><span class="p">(</span><span class="n">T</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate the blackbody longwave radiation at the given temperature, using an approximation of the Stefan-Boltzmann law.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mf">1.607e-4</span> <span class="o">*</span> <span class="n">T</span><span class="o">**</span><span class="mf">2.528</span></div>
+
+
+
+<div class="viewcode-block" id="lw_cloud">
+<a class="viewcode-back" href="../../misc.html#simtrails.forcing.lw_cloud">[docs]</a>
+<span class="k">def</span> <span class="nf">lw_cloud</span><span class="p">(</span><span class="n">lw_inc</span><span class="p">,</span> <span class="n">T_c</span><span class="p">,</span> <span class="n">tau</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the longwave radiation flux in the presence of clouds.</span>
+<span class="sd">    Depricated (not used).  </span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    lw_inc (float): Incoming longwave radiation flux.</span>
+<span class="sd">    T_c (float): Cloud temperature.</span>
+<span class="sd">    tau (float): Cloud optical depth.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    float: Longwave radiation flux in the presence of clouds.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cld_upwelling</span> <span class="o">=</span> <span class="n">atm_stf_blz</span><span class="p">(</span><span class="n">T_c</span><span class="p">)</span>
+    <span class="n">f_unobscured</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">tau</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">f_unobscured</span> <span class="o">*</span> <span class="n">lw_inc</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">f_unobscured</span><span class="p">)</span> <span class="o">*</span> <span class="n">cld_upwelling</span></div>
+
+
+
+<div class="viewcode-block" id="sw_cloud">
+<a class="viewcode-back" href="../../misc.html#simtrails.forcing.sw_cloud">[docs]</a>
+<span class="k">def</span> <span class="nf">sw_cloud</span><span class="p">(</span><span class="n">tau</span><span class="p">,</span> <span class="n">sw_inc</span><span class="o">=</span><span class="mi">1361</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mf">0.85</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the shortwave radiation after accounting for cloud albedo.</span>
+<span class="sd">    Depricated (not used).</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    tau (float): Optical depth of the cloud.</span>
+<span class="sd">    sw_inc (float, optional): Incoming shortwave radiation. Default is 1361 W/m^2.</span>
+<span class="sd">    g (float, optional): Cloud asymmetry parameter. Default is 0.85.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    float: Shortwave radiation after accounting for cloud albedo.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cloud_albedo</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">g</span><span class="p">)</span> <span class="o">*</span> <span class="n">tau</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">g</span><span class="p">)</span> <span class="o">*</span> <span class="n">tau</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sw_inc</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">cloud_albedo</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_rf">
+<a class="viewcode-back" href="../../misc.html#simtrails.forcing.get_rf">[docs]</a>
+<span class="k">def</span> <span class="nf">get_rf</span><span class="p">(</span>
+    <span class="n">iwc</span><span class="p">,</span>
+    <span class="n">depth</span><span class="p">,</span>
+    <span class="n">eff_radius</span><span class="p">,</span>
+    <span class="n">altitude</span><span class="p">,</span>
+    <span class="n">atmosphere</span><span class="o">=</span><span class="n">standard_atmosphere</span><span class="p">,</span>
+    <span class="n">solar_zenith_angle</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">f_solar</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the radiative forcing (rf) due to cloud ice particles.</span>
+<span class="sd">    Depricated (not used).</span>
+
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    iwc (float): Ice water content in kg/m^3.</span>
+<span class="sd">    depth (float): Thickness of the cloud layer in meters.</span>
+<span class="sd">    eff_radius (float): Effective radius of the ice particles in meters.</span>
+<span class="sd">    base (float): Base altitude of the cloud layer in meters.</span>
+<span class="sd">    atmosphere (Atmosphere, optional): Atmosphere object representing the atmospheric conditions. Defaults to standard_atmosphere.</span>
+<span class="sd">    solar_zenith_angle (float, optional): Solar zenith angle in radians. Defaults to 0.</span>
+<span class="sd">    f_solar (float, optional): Solar scaling factor. Defaults to 1.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    float: The radiative forcing (rf) in W/m^2.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">T_s</span> <span class="o">=</span> <span class="n">atmosphere</span><span class="o">.</span><span class="n">value_at_altitude</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">T_c</span> <span class="o">=</span> <span class="n">atmosphere</span><span class="o">.</span><span class="n">value_at_altitude</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">,</span> <span class="n">altitude</span> <span class="o">+</span> <span class="n">depth</span><span class="p">)</span>
+
+    <span class="n">tau</span> <span class="o">=</span> <span class="n">get_tau</span><span class="p">(</span><span class="n">iwc</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">eff_radius</span><span class="p">)</span>
+
+    <span class="n">solar_constant</span> <span class="o">=</span> <span class="mi">1361</span> <span class="o">*</span> <span class="n">f_solar</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">solar_zenith_angle</span><span class="p">)</span>  <span class="c1"># W/m^2</span>
+    <span class="k">if</span> <span class="n">solar_zenith_angle</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">solar_constant</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">tau_solar</span> <span class="o">=</span> <span class="n">tau</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">solar_zenith_angle</span><span class="p">)</span>
+
+    <span class="n">sw_forced_downwelling</span> <span class="o">=</span> <span class="n">sw_cloud</span><span class="p">(</span><span class="n">tau_solar</span><span class="p">,</span> <span class="n">sw_inc</span><span class="o">=</span><span class="n">solar_constant</span><span class="p">)</span>
+    <span class="n">lw_forced_upwelling</span> <span class="o">=</span> <span class="n">lw_cloud</span><span class="p">(</span><span class="n">atm_stf_blz</span><span class="p">(</span><span class="n">T_s</span><span class="p">),</span> <span class="n">T_c</span><span class="p">,</span> <span class="n">tau</span><span class="p">)</span>
+
+    <span class="n">sw_rf</span> <span class="o">=</span> <span class="n">sw_forced_downwelling</span> <span class="o">-</span> <span class="n">solar_constant</span>
+    <span class="n">lw_rf</span> <span class="o">=</span> <span class="n">atm_stf_blz</span><span class="p">(</span><span class="n">T_s</span><span class="p">)</span> <span class="o">-</span> <span class="n">lw_forced_upwelling</span>
+
+    <span class="n">rf</span> <span class="o">=</span> <span class="n">lw_rf</span> <span class="o">+</span> <span class="n">sw_rf</span>
+
+    <span class="k">return</span> <span class="n">rf</span></div>
+
+
+
+<div class="viewcode-block" id="get_rf_schumann12">
+<a class="viewcode-back" href="../../misc.html#simtrails.forcing.get_rf_schumann12">[docs]</a>
+<span class="k">def</span> <span class="nf">get_rf_schumann12</span><span class="p">(</span>
+    <span class="n">iwc</span><span class="p">,</span>
+    <span class="n">depth</span><span class="p">,</span>
+    <span class="n">eff_radius</span><span class="p">,</span>
+    <span class="n">altitude</span><span class="p">,</span>
+    <span class="n">atmosphere</span><span class="o">=</span><span class="n">standard_atmosphere</span><span class="p">,</span>
+    <span class="n">solar_zenith_angle</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">albedo</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">olr</span><span class="o">=</span><span class="mf">200.0</span><span class="p">,</span>
+    <span class="n">f_solar</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">sw</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">lw</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the radiative forcing using the Schumann et al. (2012) method.</span>
+<span class="sd">    Depricated (not used).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        iwc (float or numpy.ndarray): Ice water content.</span>
+<span class="sd">        depth (float or numpy.ndarray): Cloud thickness.</span>
+<span class="sd">        eff_radius (float or numpy.ndarray): Effective radius.</span>
+<span class="sd">        base (float or numpy.ndarray): Cloud base altitude.</span>
+<span class="sd">        atmosphere (Atmosphere, optional): Atmosphere object representing the atmospheric conditions. Defaults to standard_atmosphere.</span>
+<span class="sd">        solar_zenith_angle (float or numpy.ndarray, optional): Solar zenith angle in degrees. Defaults to 0.0.</span>
+<span class="sd">        albedo (float or numpy.ndarray, optional): Surface albedo. Defaults to 0.0.</span>
+<span class="sd">        olr (float or numpy.ndarray, optional): Outgoing longwave radiation. Defaults to 200.0.</span>
+<span class="sd">        f_solar (float or numpy.ndarray, optional): Solar flux scaling factor. Defaults to 1.</span>
+<span class="sd">        sw (bool, optional): Flag indicating whether to calculate shortwave radiative forcing. Defaults to True.</span>
+<span class="sd">        lw (bool, optional): Flag indicating whether to calculate longwave radiative forcing. Defaults to True.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        float or numpy.ndarray: Radiative forcing.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">zip_longest</span>
+
+    <span class="kn">from</span> <span class="nn">pycontrails.models.cocip.radiative_forcing</span> <span class="kn">import</span> <span class="p">(</span>
+        <span class="n">shortwave_radiative_forcing</span><span class="p">,</span>
+        <span class="n">longwave_radiative_forcing</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">pycontrails.physics.geo</span> <span class="kn">import</span> <span class="p">(</span>
+        <span class="n">solar_direct_radiation</span><span class="p">,</span>
+        <span class="n">solar_constant</span><span class="p">,</span>
+        <span class="n">orbital_position</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="p">(</span>
+        <span class="n">iwc</span><span class="p">,</span>
+        <span class="n">depth</span><span class="p">,</span>
+        <span class="n">eff_radius</span><span class="p">,</span>
+        <span class="n">altitude</span><span class="p">,</span>
+        <span class="n">solar_zenith_angle</span><span class="p">,</span>
+        <span class="n">f_solar</span><span class="p">,</span>
+        <span class="n">albedo</span><span class="p">,</span>
+        <span class="n">olr</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span>
+        <span class="n">iwc</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">eff_radius</span><span class="p">,</span> <span class="n">altitude</span><span class="p">,</span> <span class="n">solar_zenith_angle</span><span class="p">,</span> <span class="n">f_solar</span><span class="p">,</span> <span class="n">albedo</span><span class="p">,</span> <span class="n">olr</span>
+    <span class="p">)</span>
+
+    <span class="n">max_shape</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="nb">max</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">items</span> <span class="ow">in</span> <span class="n">zip_longest</span><span class="p">(</span>
+            <span class="o">*</span><span class="p">[</span>
+                <span class="n">arr</span><span class="o">.</span><span class="n">shape</span>
+                <span class="k">for</span> <span class="n">arr</span> <span class="ow">in</span> <span class="p">[</span>
+                    <span class="n">iwc</span><span class="p">,</span>
+                    <span class="n">depth</span><span class="p">,</span>
+                    <span class="n">eff_radius</span><span class="p">,</span>
+                    <span class="n">altitude</span><span class="p">,</span>
+                    <span class="n">solar_zenith_angle</span><span class="p">,</span>
+                    <span class="n">f_solar</span><span class="p">,</span>
+                    <span class="n">albedo</span><span class="p">,</span>
+                    <span class="n">olr</span><span class="p">,</span>
+                <span class="p">]</span>
+            <span class="p">],</span>
+            <span class="n">fillvalue</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">]</span>
+    <span class="n">iwc</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">eff_radius</span><span class="p">,</span> <span class="n">altitude</span><span class="p">,</span> <span class="n">solar_zenith_angle</span><span class="p">,</span> <span class="n">f_solar</span><span class="p">,</span> <span class="n">albedo</span><span class="p">,</span> <span class="n">olr</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">max_shape</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="p">[</span>
+            <span class="n">iwc</span><span class="p">,</span>
+            <span class="n">depth</span><span class="p">,</span>
+            <span class="n">eff_radius</span><span class="p">,</span>
+            <span class="n">altitude</span><span class="p">,</span>
+            <span class="n">solar_zenith_angle</span><span class="p">,</span>
+            <span class="n">f_solar</span><span class="p">,</span>
+            <span class="n">albedo</span><span class="p">,</span>
+            <span class="n">olr</span><span class="p">,</span>
+        <span class="p">]</span>
+    <span class="p">]</span>
+
+    <span class="n">times</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">datetime64</span><span class="p">(</span><span class="s2">&quot;2019-12-20 12:00&quot;</span><span class="p">)],</span> <span class="n">max_shape</span><span class="p">)</span>
+    <span class="n">sd0</span> <span class="o">=</span> <span class="n">solar_constant</span><span class="p">(</span>
+        <span class="n">orbital_position</span><span class="p">(</span><span class="n">times</span><span class="p">)</span>
+    <span class="p">)</span>  <span class="c1"># only used for sza calculation:  #datetime...</span>
+    <span class="n">sdr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">solar_zenith_angle</span><span class="p">)</span> <span class="o">*</span> <span class="n">sd0</span>
+    <span class="n">rsr</span> <span class="o">=</span> <span class="n">sdr</span> <span class="o">*</span> <span class="n">albedo</span>  <span class="c1"># zero surface albedo, zero background cloud case</span>
+    <span class="n">olr</span> <span class="o">=</span> <span class="n">olr</span>  <span class="c1"># ???????</span>
+    <span class="n">air_temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span>
+        <span class="n">atmosphere</span><span class="o">.</span><span class="n">value_at_altitude</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">,</span> <span class="n">altitude</span> <span class="o">+</span> <span class="n">depth</span><span class="p">),</span> <span class="n">max_shape</span>
+    <span class="p">)</span>
+
+    <span class="n">tau</span> <span class="o">=</span> <span class="n">get_tau</span><span class="p">(</span><span class="n">iwc</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">eff_radius</span><span class="p">)</span>
+    <span class="n">habit_weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]),</span> <span class="n">max_shape</span> <span class="o">+</span> <span class="p">[</span><span class="mi">8</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="n">rf_sw</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">shortwave_radiative_forcing</span><span class="p">(</span>
+            <span class="n">eff_radius</span><span class="p">,</span>
+            <span class="n">sdr</span><span class="p">,</span>
+            <span class="n">rsr</span><span class="p">,</span>
+            <span class="n">sd0</span><span class="p">,</span>
+            <span class="n">tau</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">max_shape</span><span class="p">),</span>
+            <span class="n">habit_weights</span><span class="p">,</span>
+            <span class="n">eff_radius</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">sw</span>
+        <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">max_shape</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">rf_lw</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">longwave_radiative_forcing</span><span class="p">(</span>
+            <span class="n">eff_radius</span><span class="p">,</span>
+            <span class="n">olr</span><span class="p">,</span>
+            <span class="n">air_temp</span><span class="p">,</span>
+            <span class="n">tau</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">max_shape</span><span class="p">),</span>
+            <span class="n">habit_weights</span><span class="p">,</span>
+            <span class="n">eff_radius</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">lw</span>
+        <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">max_shape</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">rf</span> <span class="o">=</span> <span class="n">rf_sw</span> <span class="o">+</span> <span class="n">rf_lw</span>
+    <span class="k">return</span> <span class="n">rf</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Oliver Driver.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

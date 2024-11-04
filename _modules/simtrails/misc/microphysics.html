@@ -1,0 +1,228 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>simtrails.misc.microphysics &mdash; Simtrails  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Simtrails
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage/installation.html">Installation and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../detectables.html">Detectables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../imagers.html">Imagers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../detectors.html">Detectors and Sensitivity Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sensitivity_result.html">Sensitivity test results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../radiative_transfer.html">Radiative Transfer and lookup tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../detection_algorithms.html">Contrail Detection Algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mannstein.html">Mannstein line-filtering algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cocip.html">CoCiP Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc.html">Miscellaneous</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Simtrails</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">simtrails.misc.microphysics</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for simtrails.misc.microphysics</h1><div class="highlight"><pre>
+<span></span><span class="c1"># %%</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">simtrails.atmosphere</span> <span class="kn">import</span> <span class="n">Atmosphere</span>
+
+
+<span class="n">standard_atmosphere</span> <span class="o">=</span> <span class="n">Atmosphere</span><span class="o">.</span><span class="n">from_name</span><span class="p">(</span><span class="s2">&quot;us&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="sph_particle_radius">
+<a class="viewcode-back" href="../../../misc.html#simtrails.misc.microphysics.sph_particle_radius">[docs]</a>
+<span class="k">def</span> <span class="nf">sph_particle_radius</span><span class="p">(</span><span class="n">iwc</span><span class="p">,</span> <span class="n">n_ice</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the volume radius, given the ice water content and number concentration of ice particles.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">((</span><span class="mi">3</span> <span class="o">*</span> <span class="n">iwc</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">n_ice</span><span class="p">))</span> <span class="o">**</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span>  <span class="c1"># Volume radius assumption</span></div>
+
+
+
+<div class="viewcode-block" id="eff_radius_from_vol">
+<a class="viewcode-back" href="../../../misc.html#simtrails.misc.microphysics.eff_radius_from_vol">[docs]</a>
+<span class="k">def</span> <span class="nf">eff_radius_from_vol</span><span class="p">(</span><span class="n">vol_radius</span><span class="p">,</span> <span class="n">rh_ice</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert  volume radius to effective radius, using the Schumann2011 conversion.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">vol_radius</span> <span class="o">/</span> <span class="n">radius_ratio_sch11</span><span class="p">(</span><span class="n">vol_radius</span><span class="p">,</span> <span class="n">rh_ice</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="vol_radius_from_eff">
+<a class="viewcode-back" href="../../../misc.html#simtrails.misc.microphysics.vol_radius_from_eff">[docs]</a>
+<span class="k">def</span> <span class="nf">vol_radius_from_eff</span><span class="p">(</span><span class="n">eff_radius</span><span class="p">,</span> <span class="n">rh_ice</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert effective radius to volume radius, using the Schumann2011 conversion.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">eff_radius</span> <span class="o">*</span> <span class="n">radius_ratio_sch11</span><span class="p">(</span><span class="n">eff_radius</span><span class="p">,</span> <span class="n">rh_ice</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="iwc_from_path">
+<a class="viewcode-back" href="../../../misc.html#simtrails.misc.microphysics.iwc_from_path">[docs]</a>
+<span class="k">def</span> <span class="nf">iwc_from_path</span><span class="p">(</span><span class="n">iwp</span><span class="p">,</span> <span class="n">depth</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert IWP to IWC.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">iwp</span> <span class="o">/</span> <span class="p">(</span><span class="n">depth</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="iwc_kgkg1_to_gm3">
+<a class="viewcode-back" href="../../../misc.html#simtrails.misc.microphysics.iwc_kgkg1_to_gm3">[docs]</a>
+<span class="k">def</span> <span class="nf">iwc_kgkg1_to_gm3</span><span class="p">(</span><span class="n">iwc</span><span class="p">,</span> <span class="n">altitude</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert the units of IWP (from per mass or air to per volume of air).&quot;&quot;&quot;</span>
+    <span class="n">density</span> <span class="o">=</span> <span class="n">standard_atmosphere</span><span class="o">.</span><span class="n">value_at_altitude</span><span class="p">(</span>
+        <span class="s2">&quot;air&quot;</span><span class="p">,</span> <span class="n">altitude</span>
+    <span class="p">)</span>  <span class="c1"># molecules cm-3 for air</span>
+    <span class="n">density</span> <span class="o">=</span> <span class="n">density</span> <span class="o">*</span> <span class="mf">1e6</span>  <span class="c1"># cm-3 to m-3</span>
+    <span class="n">density</span> <span class="o">=</span> <span class="n">density</span> <span class="o">*</span> <span class="mf">28.96</span> <span class="o">/</span> <span class="mf">6.022e23</span>  <span class="c1"># m-3 to g/m3</span>
+    <span class="n">iwc</span> <span class="o">=</span> <span class="n">iwc</span>  <span class="c1"># kg/kg  = g/g</span>
+    <span class="n">iwc</span> <span class="o">=</span> <span class="n">iwc</span> <span class="o">*</span> <span class="n">density</span>  <span class="c1"># g/g to g/m^3</span>
+    <span class="k">return</span> <span class="n">iwc</span></div>
+
+
+
+<div class="viewcode-block" id="radius_ratio_sch11">
+<a class="viewcode-back" href="../../../misc.html#simtrails.misc.microphysics.radius_ratio_sch11">[docs]</a>
+<span class="k">def</span> <span class="nf">radius_ratio_sch11</span><span class="p">(</span><span class="n">vol_radius</span><span class="p">,</span> <span class="n">rh_ice</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The ratio of volume to effective radius, as given by Schumann2011.&quot;&quot;&quot;</span>
+    <span class="c1"># radii in microns; r_vol / r_eff</span>
+    <span class="c1"># from schumann2011</span>
+    <span class="n">r_0</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">r_1</span> <span class="o">=</span> <span class="mi">20</span>
+    <span class="n">r_r0</span> <span class="o">=</span> <span class="n">vol_radius</span> <span class="o">/</span> <span class="n">r_0</span>
+    <span class="n">r_r1</span> <span class="o">=</span> <span class="n">vol_radius</span> <span class="o">/</span> <span class="n">r_1</span>
+
+    <span class="n">c_habit</span> <span class="o">=</span> <span class="mf">2.2</span> <span class="o">+</span> <span class="mf">0.00113</span> <span class="o">*</span> <span class="n">r_r0</span> <span class="o">-</span> <span class="mf">1.121</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.011</span> <span class="o">*</span> <span class="n">r_r0</span><span class="p">)</span>
+    <span class="n">c_r</span> <span class="o">=</span> <span class="mf">0.9</span> <span class="o">+</span> <span class="p">(</span><span class="n">c_habit</span> <span class="o">-</span> <span class="mf">1.7</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0</span> <span class="o">*</span> <span class="n">r_r1</span><span class="p">))</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="n">c_r</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0</span> <span class="o">*</span> <span class="n">rh_ice</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">c</span></div>
+
+
+
+<span class="c1"># %%</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">standard_atmosphere</span><span class="o">.</span><span class="n">value_at_altitude</span><span class="p">(</span><span class="s2">&quot;air&quot;</span><span class="p">,</span> <span class="mi">11</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">iwc_kgkg1_to_gm3</span><span class="p">(</span><span class="mf">1e-5</span><span class="p">,</span> <span class="mi">11</span><span class="p">))</span>
+
+<span class="c1"># %%</span>
+
+
+<div class="viewcode-block" id="ic_lrt_properties">
+<a class="viewcode-back" href="../../../misc.html#simtrails.misc.microphysics.ic_lrt_properties">[docs]</a>
+<span class="k">def</span> <span class="nf">ic_lrt_properties</span><span class="p">(</span>
+    <span class="n">iwc</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">iwp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">eff_radius</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">n_ice</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">depth</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the properties (IWP and effective radius) of an ice contrail in the lower radiative troposphere.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        iwc (float, optional): Peak ice water content in g/m^3. Defaults to None.</span>
+<span class="sd">        iwp (float, optional): Peak ice water path in g/m^2. Defaults to None.</span>
+<span class="sd">        eff_radius (float, optional): Effective radius of ice particles in micrometers. Defaults to None.</span>
+<span class="sd">        n_ice (float, optional): Number concentration of ice particles in L^-1. Defaults to None.</span>
+<span class="sd">        depth (float, optional): Thickness of the contrail in km. Defaults to 0.5.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: A tuple containing the peak ice water content in g/m^3 and the effective radius of ice particles in micrometers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">iwc</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">iwp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">iwp</span> <span class="o">=</span> <span class="mf">5.0</span>
+
+    <span class="k">if</span> <span class="n">iwp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">iwp</span> <span class="o">=</span> <span class="n">iwc</span> <span class="o">*</span> <span class="n">depth</span> <span class="o">*</span> <span class="mf">1e3</span>
+        <span class="c1"># iwc = iwc_from_path(iwp, depth * 1e3)</span>
+
+    <span class="k">if</span> <span class="n">eff_radius</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">n_ice</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">eff_radius</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="k">elif</span> <span class="n">eff_radius</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">eff_radius</span> <span class="o">=</span> <span class="n">sph_particle_radius</span><span class="p">(</span><span class="n">iwc</span><span class="p">,</span> <span class="n">n_ice</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e6</span>
+    <span class="k">return</span> <span class="n">iwp</span><span class="p">,</span> <span class="n">eff_radius</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Oliver Driver.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
