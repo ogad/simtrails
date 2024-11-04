@@ -1,0 +1,196 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simtrails documentation &mdash; Simtrails  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation and Quick Start" href="usage/installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            Simtrails
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage/installation.html">Installation and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="detectables.html">Detectables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="imagers.html">Imagers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="detectors.html">Detectors and Sensitivity Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sensitivity_result.html">Sensitivity test results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="radiative_transfer.html">Radiative Transfer and lookup tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="detection_algorithms.html">Contrail Detection Algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mannstein.html">Mannstein line-filtering algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cocip.html">CoCiP Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="misc.html">Miscellaneous</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">Simtrails</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Simtrails documentation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="simtrails-documentation">
+<h1>Simtrails documentation<a class="headerlink" href="#simtrails-documentation" title="Link to this heading"></a></h1>
+<p>Simtrails is a package for simulating synthetic satellite images of contrails
+using radiative transfer modelling (via <a class="reference external" href="https://www.libradtran.org/">libRadtran</a>
+and the <a class="reference external" href="https://github.com/EdGrrr/pyLRT/">pyLRT</a> python wrapper), and test the ability
+of contrail detection algorithms to detect the simulated contrails.</p>
+<p>Details of contrail detectability are found in the paper by Driver et al. (2024) <a class="footnote-reference brackets" href="#id2" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage/installation.html">Installation and Quick Start</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage/installation.html#installation">Installation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="detectables.html">Detectables</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="detectables.html#simtrails.detectable.Detectable"><code class="docutils literal notranslate"><span class="pre">Detectable</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="detectables.html#detectable-contrail-scenes">Detectable contrail scenes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="imagers.html">Imagers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="imagers.html#simtrails.imager.GOESImager"><code class="docutils literal notranslate"><span class="pre">GOESImager</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="imagers.html#simtrails.imager.Imager"><code class="docutils literal notranslate"><span class="pre">Imager</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="imagers.html#simtrails.imager.ImagerChannel"><code class="docutils literal notranslate"><span class="pre">ImagerChannel</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="detectors.html">Detectors and Sensitivity Tests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="detectors.html#detectors">Detectors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="detectors.html#sensitivity-tests">Sensitivity tests</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sensitivity_result.html">Sensitivity test results</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sensitivity_result.html#simtrails.sensitivity_result.SensitivityResult"><code class="docutils literal notranslate"><span class="pre">SensitivityResult</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="radiative_transfer.html">Radiative Transfer and lookup tables</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="radiative_transfer.html#module-simtrails.radiative_transfer">Radiative transfer infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radiative_transfer.html#module-simtrails.lookup">Lookup tables</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="detection_algorithms.html">Contrail Detection Algorithms</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="detection_algorithms.html#simtrails.detection_algorithms.ContrailDetectionAlgorithm"><code class="docutils literal notranslate"><span class="pre">ContrailDetectionAlgorithm</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="detection_algorithms.html#simtrails.detection_algorithms.MannsteinCDA"><code class="docutils literal notranslate"><span class="pre">MannsteinCDA</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="mannstein.html">Mannstein line-filtering algorithm</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mannstein.html#simtrails.mannstein.find_contrail_pixels"><code class="docutils literal notranslate"><span class="pre">find_contrail_pixels()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="mannstein.html#simtrails.mannstein.get_angles"><code class="docutils literal notranslate"><span class="pre">get_angles()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="mannstein.html#simtrails.mannstein.get_regional_gradient_mask"><code class="docutils literal notranslate"><span class="pre">get_regional_gradient_mask()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="mannstein.html#simtrails.mannstein.label_blobs"><code class="docutils literal notranslate"><span class="pre">label_blobs()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="mannstein.html#simtrails.mannstein.linear_and_long_enough"><code class="docutils literal notranslate"><span class="pre">linear_and_long_enough()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="mannstein.html#simtrails.mannstein.linearity_score"><code class="docutils literal notranslate"><span class="pre">linearity_score()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="mannstein.html#simtrails.mannstein.lowpass"><code class="docutils literal notranslate"><span class="pre">lowpass()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="mannstein.html#simtrails.mannstein.mannstein_contrail_mask"><code class="docutils literal notranslate"><span class="pre">mannstein_contrail_mask()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="mannstein.html#simtrails.mannstein.mannstein_preprocessing"><code class="docutils literal notranslate"><span class="pre">mannstein_preprocessing()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="mannstein.html#simtrails.mannstein.synthesize_line_kernel"><code class="docutils literal notranslate"><span class="pre">synthesize_line_kernel()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="mannstein.html#simtrails.mannstein.zero_sum_normalize"><code class="docutils literal notranslate"><span class="pre">zero_sum_normalize()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cocip.html">CoCiP Data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cocip.html#simtrails.cocip.data.CocipDataset"><code class="docutils literal notranslate"><span class="pre">CocipDataset</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="cocip.html#simtrails.cocip.data.download_blob"><code class="docutils literal notranslate"><span class="pre">download_blob()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="cocip.html#simtrails.cocip.data.open_gcs"><code class="docutils literal notranslate"><span class="pre">open_gcs()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="cocip.html#simtrails.cocip.data.open_parquet"><code class="docutils literal notranslate"><span class="pre">open_parquet()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="cocip.html#simtrails.cocip.data.preprocess"><code class="docutils literal notranslate"><span class="pre">preprocess()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="misc.html">Miscellaneous</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#module-simtrails.misc.microphysics">Physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#module-simtrails.misc.plotting">Plotting</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="references">
+<h1>References<a class="headerlink" href="#references" title="Link to this heading"></a></h1>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id2" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>Driver, O. G. A., Stettler, M. E. J., and Gryspeerdt, E.: Factors limiting contrail detection in satellite imagery, EGUsphere [preprint], <a class="reference external" href="https://doi.org/10.5194/egusphere-2024-2198">https://doi.org/10.5194/egusphere-2024-2198</a>, 2024.d</p>
+</aside>
+</aside>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="usage/installation.html" class="btn btn-neutral float-right" title="Installation and Quick Start" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Oliver Driver.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

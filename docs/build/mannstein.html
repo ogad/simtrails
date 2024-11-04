@@ -1,0 +1,322 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mannstein line-filtering algorithm &mdash; Simtrails  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="CoCiP Data" href="cocip.html" />
+    <link rel="prev" title="Contrail Detection Algorithms" href="detection_algorithms.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Simtrails
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="usage/installation.html">Installation and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="detectables.html">Detectables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="imagers.html">Imagers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="detectors.html">Detectors and Sensitivity Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sensitivity_result.html">Sensitivity test results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="radiative_transfer.html">Radiative Transfer and lookup tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="detection_algorithms.html">Contrail Detection Algorithms</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Mannstein line-filtering algorithm</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#simtrails.mannstein.find_contrail_pixels"><code class="docutils literal notranslate"><span class="pre">find_contrail_pixels()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#simtrails.mannstein.get_angles"><code class="docutils literal notranslate"><span class="pre">get_angles()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#simtrails.mannstein.get_regional_gradient_mask"><code class="docutils literal notranslate"><span class="pre">get_regional_gradient_mask()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#simtrails.mannstein.label_blobs"><code class="docutils literal notranslate"><span class="pre">label_blobs()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#simtrails.mannstein.linear_and_long_enough"><code class="docutils literal notranslate"><span class="pre">linear_and_long_enough()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#simtrails.mannstein.linearity_score"><code class="docutils literal notranslate"><span class="pre">linearity_score()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#simtrails.mannstein.lowpass"><code class="docutils literal notranslate"><span class="pre">lowpass()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#simtrails.mannstein.mannstein_contrail_mask"><code class="docutils literal notranslate"><span class="pre">mannstein_contrail_mask()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#simtrails.mannstein.mannstein_preprocessing"><code class="docutils literal notranslate"><span class="pre">mannstein_preprocessing()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#simtrails.mannstein.synthesize_line_kernel"><code class="docutils literal notranslate"><span class="pre">synthesize_line_kernel()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#simtrails.mannstein.zero_sum_normalize"><code class="docutils literal notranslate"><span class="pre">zero_sum_normalize()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cocip.html">CoCiP Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="misc.html">Miscellaneous</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Simtrails</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Mannstein line-filtering algorithm</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/mannstein.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="mannstein-line-filtering-algorithm">
+<h1>Mannstein line-filtering algorithm<a class="headerlink" href="#mannstein-line-filtering-algorithm" title="Link to this heading"></a></h1>
+<p>The Mannstein algorithm, which comes from Mannstein et al. (1999) <a class="footnote-reference brackets" href="#id3" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>, is a line-filtering algorithm
+which acts on a combination of BT and BTD images from infrared channels. The
+specific implementation used here is as implemented by McCloskey et al. (2021) <a class="footnote-reference brackets" href="#id4" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>.</p>
+<p>Much of the documentaton is left unchaged from the original implementation.</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id3" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>Mannstein, H., Meyer, R., Wendling, P., 1999. Operational detection of contrails from NOAA-AVHRR-data. International Journal of Remote Sensing 20, 1641–1660. <a class="reference external" href="https://doi.org/10.1080/014311699212650">https://doi.org/10.1080/014311699212650</a></p>
+</aside>
+<aside class="footnote brackets" id="id4" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">2</a><span class="fn-bracket">]</span></span>
+<p>McCloskey, K., Geraedts, S., Van Arsdale, C., Brand, E., 2021. A human-labeled Landsat-8 contrails dataset, in: Climate Change AI. Presented at the ICML 2021 Workshop on Tackling Climate Change with Machine Learning, Climate Change AI. <a class="reference external" href="https://www.climatechange.ai/papers/icml2021/2">https://www.climatechange.ai/papers/icml2021/2</a></p>
+</aside>
+</aside>
+<dl class="py function" id="module-simtrails.mannstein">
+<dt class="sig sig-object py" id="simtrails.mannstein.find_contrail_pixels">
+<span class="sig-prename descclassname"><span class="pre">simtrails.mannstein.</span></span><span class="sig-name descname"><span class="pre">find_contrail_pixels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">line_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtrails/mannstein.html#find_contrail_pixels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtrails.mannstein.find_contrail_pixels" title="Link to this definition"></a></dt>
+<dd><p>Returns lat/lng endpoints of all contrails in line_mask.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>line_mask</strong> – np.array, binary mask of where contrail lines were detected.</p></li>
+<li><p><strong>config</strong> – dict, algorithm configuration parameters (eg thresholds).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of (row pixel coordinates, col pixel coordinates) tuples.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtrails.mannstein.get_angles">
+<span class="sig-prename descclassname"><span class="pre">simtrails.mannstein.</span></span><span class="sig-name descname"><span class="pre">get_angles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtrails/mannstein.html#get_angles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtrails.mannstein.get_angles" title="Link to this definition"></a></dt>
+<dd><p>Gets the list of angles from a config.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> – the config</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the angles.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtrails.mannstein.get_regional_gradient_mask">
+<span class="sig-prename descclassname"><span class="pre">simtrails.mannstein.</span></span><span class="sig-name descname"><span class="pre">get_regional_gradient_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t_12um</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_12um_stddev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtrails/mannstein.html#get_regional_gradient_mask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtrails.mannstein.get_regional_gradient_mask" title="Link to this definition"></a></dt>
+<dd><p>Masks out pixels on the edges of large features.</p>
+<p>There’s a lot of ways to implement a “large scale gradient”,
+and the Mannstein et al paper only specifies the size: 15px.
+Here we use a blurred Prewitt operator because it’s the simplest
+to implement at varying kernel sizes for later tuning.
+<a class="reference external" href="https://en.wikipedia.org/wiki/Prewitt_operator">https://en.wikipedia.org/wiki/Prewitt_operator</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t_12um</strong> – array of 12 um temperature.</p></li>
+<li><p><strong>t_12um_stddev</strong> – stddev of above array.</p></li>
+<li><p><strong>config</strong> – algorithm configuration parameters (eg thresholds).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>boolean array of whether the pixel is part of a large scale gradient,</dt><dd><p>and therefore is not a contrail.</p>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtrails.mannstein.label_blobs">
+<span class="sig-prename descclassname"><span class="pre">simtrails.mannstein.</span></span><span class="sig-name descname"><span class="pre">label_blobs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">line_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtrails/mannstein.html#label_blobs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtrails.mannstein.label_blobs" title="Link to this definition"></a></dt>
+<dd><p>Given a mask, yields pixel coordinates of connected components.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>line_mask</strong> – 2d array, 1 when there is a contrail 0 otherwise.</p></li>
+<li><p><strong>config</strong> – params for what is an allowable contrail.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Yields<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple of (row_coordinates, col_coordinates).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtrails.mannstein.linear_and_long_enough">
+<span class="sig-prename descclassname"><span class="pre">simtrails.mannstein.</span></span><span class="sig-name descname"><span class="pre">linear_and_long_enough</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">avg_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtrails/mannstein.html#linear_and_long_enough"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtrails.mannstein.linear_and_long_enough" title="Link to this definition"></a></dt>
+<dd><p>Decides if a connected component is linear and long enough for a contrail.</p>
+<p>Does this by performing a linear fit to all the passed in pixels. Note that
+if the pixels are a vertically-oriented rectangle, the ‘best fit line’ will
+have a slope of infinity, but your average linear fitter really doesn’t like
+making an infinite slope. So in this method we decide whether to use
+x or y as the independent variable, in such a way as to minimize the slope
+before doing any fitting (e.g. for mostly vertical clusters, we fit
+x = f(y), for mostly horizontal we fit y = f(x).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ys</strong> – pixel row coordinates</p></li>
+<li><p><strong>xs</strong> – pixel col coordinates</p></li>
+<li><p><strong>config</strong> – Dict containing params for what makes a contrail</p></li>
+<li><p><strong>avg_size</strong> – Below we handle top/bottom or left/right endpoints separately,
+based on the slope. To reduce noise from extremal pixel locations, take
+the average of a small number of extremal pixels as the endpoint.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the pixel blob meets config-defined linearity and size thresholds.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtrails.mannstein.linearity_score">
+<span class="sig-prename descclassname"><span class="pre">simtrails.mannstein.</span></span><span class="sig-name descname"><span class="pre">linearity_score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slope</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intercept</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">treat_horizontal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtrails/mannstein.html#linearity_score"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtrails.mannstein.linearity_score" title="Link to this definition"></a></dt>
+<dd><p>Calculate the “linearity score” of a set of points relative to a line.
+OD: Original addition to combat the problem of r-squared omitting lines that are aligned with the x or y axis.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtrails.mannstein.lowpass">
+<span class="sig-prename descclassname"><span class="pre">simtrails.mannstein.</span></span><span class="sig-name descname"><span class="pre">lowpass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtrails/mannstein.html#lowpass"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtrails.mannstein.lowpass" title="Link to this definition"></a></dt>
+<dd><p>Applies a gaussian lowpass kernel.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtrails.mannstein.mannstein_contrail_mask">
+<span class="sig-prename descclassname"><span class="pre">simtrails.mannstein.</span></span><span class="sig-name descname"><span class="pre">mannstein_contrail_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pbar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtrails/mannstein.html#mannstein_contrail_mask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtrails.mannstein.mannstein_contrail_mask" title="Link to this definition"></a></dt>
+<dd><p>Mannstein et al contrail detection algorithm.</p>
+<p>See “Operational detection of contrails from NOAA-AVHRR-data”,
+International Journal of Remote Sensing, 1999:
+<a class="reference external" href="https://www.tandfonline.com/doi/abs/10.1080/014311699212650">https://www.tandfonline.com/doi/abs/10.1080/014311699212650</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>features</strong> – dict containing 11um-12um and 12um brightness temperatures.</p></li>
+<li><p><strong>config</strong> – algorithm configuration parameters (eg thresholds).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Mask, pixels identified as contrails are 1 and everywhere else is 0.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtrails.mannstein.mannstein_preprocessing">
+<span class="sig-prename descclassname"><span class="pre">simtrails.mannstein.</span></span><span class="sig-name descname"><span class="pre">mannstein_preprocessing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtrails/mannstein.html#mannstein_preprocessing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtrails.mannstein.mannstein_preprocessing" title="Link to this definition"></a></dt>
+<dd><p>Returns mask identifying contrail pixels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>features</strong> – dict containing 11um and 12um brightness temperatures.</p></li>
+<li><p><strong>config</strong> – algorithm configuration parameters (eg thresholds).</p></li>
+<li><p><strong>degrees</strong> – the angle to detect contrails for.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Array which is 1 where a pixel is on a contrail and 0 elsewhere.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtrails.mannstein.synthesize_line_kernel">
+<span class="sig-prename descclassname"><span class="pre">simtrails.mannstein.</span></span><span class="sig-name descname"><span class="pre">synthesize_line_kernel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">degrees</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtrails/mannstein.html#synthesize_line_kernel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtrails.mannstein.synthesize_line_kernel" title="Link to this definition"></a></dt>
+<dd><p>Returns a kernel for line detection at the specified angle in <cite>degrees</cite>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtrails.mannstein.zero_sum_normalize">
+<span class="sig-prename descclassname"><span class="pre">simtrails.mannstein.</span></span><span class="sig-name descname"><span class="pre">zero_sum_normalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kernel</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtrails/mannstein.html#zero_sum_normalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtrails.mannstein.zero_sum_normalize" title="Link to this definition"></a></dt>
+<dd><p>Normalizes kernels that are intentionally symmetrical around 0.</p>
+<p>Difference of Gaussians and Prewitt operators (among others) are zero-summing,
+so we normalize the positive and negative values separately, as suggested by
+<a class="reference external" href="http://www.imagemagick.org/Usage/convolve/#zero-summing_normalization">http://www.imagemagick.org/Usage/convolve/#zero-summing_normalization</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kernel</strong> – 2D numpy array.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Zero-sum normalized kernel.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="detection_algorithms.html" class="btn btn-neutral float-left" title="Contrail Detection Algorithms" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cocip.html" class="btn btn-neutral float-right" title="CoCiP Data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Oliver Driver.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,421 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>simtrails.radiative_transfer &mdash; Simtrails  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Simtrails
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../usage/installation.html">Installation and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../detectables.html">Detectables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../imagers.html">Imagers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../detectors.html">Detectors and Sensitivity Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sensitivity_result.html">Sensitivity test results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../radiative_transfer.html">Radiative Transfer and lookup tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../detection_algorithms.html">Contrail Detection Algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mannstein.html">Mannstein line-filtering algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cocip.html">CoCiP Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../misc.html">Miscellaneous</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Simtrails</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">simtrails.radiative_transfer</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for simtrails.radiative_transfer</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pyLRT</span> <span class="kn">import</span> <span class="n">get_lrt_folder</span>
+
+<span class="c1"># from pyLRT.cloud import Cloud</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">.atmosphere</span> <span class="kn">import</span> <span class="n">Atmosphere</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">LIBRADTRAN_FOLDER</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;LIBRADTRAN_FOLDER&quot;</span><span class="p">])</span>
+<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+    <span class="n">LIBRADTRAN_FOLDER</span> <span class="o">=</span> <span class="n">get_lrt_folder</span><span class="p">()</span>
+
+
+<span class="n">LATITUDES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;us&quot;</span><span class="p">:</span> <span class="mf">40.0</span><span class="p">,</span>
+    <span class="s2">&quot;t&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="s2">&quot;ms&quot;</span><span class="p">:</span> <span class="mf">45.0</span><span class="p">,</span>
+    <span class="s2">&quot;mw&quot;</span><span class="p">:</span> <span class="mf">45.0</span><span class="p">,</span>
+    <span class="s2">&quot;ss&quot;</span><span class="p">:</span> <span class="mf">60.0</span><span class="p">,</span>
+    <span class="s2">&quot;sw&quot;</span><span class="p">:</span> <span class="mf">60.0</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">LONGITUDES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;us&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="s2">&quot;t&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="s2">&quot;ms&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="s2">&quot;mw&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="s2">&quot;ss&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="s2">&quot;sw&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">DATES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;us&quot;</span><span class="p">:</span> <span class="s2">&quot;06 01&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;t&quot;</span><span class="p">:</span> <span class="s2">&quot;06 01&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ms&quot;</span><span class="p">:</span> <span class="s2">&quot;06 01&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;mw&quot;</span><span class="p">:</span> <span class="s2">&quot;12 01&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ss&quot;</span><span class="p">:</span> <span class="s2">&quot;06 01&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;sw&quot;</span><span class="p">:</span> <span class="s2">&quot;12 01&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">ATMOSPHERE_NAMES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;us&quot;</span><span class="p">:</span> <span class="s2">&quot;US-standard&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;t&quot;</span><span class="p">:</span> <span class="s2">&quot;tropics&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ms&quot;</span><span class="p">:</span> <span class="s2">&quot;midlatitude_summer&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;mw&quot;</span><span class="p">:</span> <span class="s2">&quot;midlatitude_winter&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ss&quot;</span><span class="p">:</span> <span class="s2">&quot;subarctic_summer&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;sw&quot;</span><span class="p">:</span> <span class="s2">&quot;subarctic_winter&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">SOLAR_CHANNELS</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;goes-r_abi_ch</span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">7</span><span class="p">)]</span>
+
+
+<div class="viewcode-block" id="get_output">
+<a class="viewcode-back" href="../../radiative_transfer.html#simtrails.radiative_transfer.get_output">[docs]</a>
+<span class="k">def</span> <span class="nf">get_output</span><span class="p">(</span><span class="n">cloud</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">brightness</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run the radiative transfer model and return the output.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        cloud: Cloud object representing the cloud properties, this is not normally used (optional)</span>
+<span class="sd">        brightness: Flag indicating whether to compute brightness quantities (default: True)</span>
+<span class="sd">        kwargs: Additional keyword arguments to customize the radiative transfer model</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        rt_output: Output of the radiative transfer model</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">pyLRT</span> <span class="kn">import</span> <span class="n">RadTran</span><span class="p">,</span> <span class="n">OutputParser</span>
+
+    <span class="n">rt</span> <span class="o">=</span> <span class="n">RadTran</span><span class="p">(</span><span class="n">LIBRADTRAN_FOLDER</span><span class="p">)</span>
+    <span class="n">rt</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s2">&quot;zout&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;TOA&quot;</span>
+    <span class="n">rt</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s2">&quot;albedo&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;0&quot;</span>
+    <span class="n">rt</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s2">&quot;umu&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;-1.0 1.0&quot;</span>
+    <span class="n">rt</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s2">&quot;output_user&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;lambda edir eup uu&quot;</span>
+    <span class="k">if</span> <span class="n">brightness</span><span class="p">:</span>
+        <span class="n">rt</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s2">&quot;output_quantity&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;brightness&quot;</span>
+    <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mol_abs_param&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;KATO2&quot;</span><span class="p">:</span>
+        <span class="n">rt</span><span class="o">.</span><span class="n">parser</span> <span class="o">=</span> <span class="n">OutputParser</span><span class="p">(</span><span class="n">dims</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;lambda&quot;</span><span class="p">])</span>
+
+    <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">rt</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="n">option</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">option</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">cloud</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">rt</span><span class="o">.</span><span class="n">cloud</span> <span class="o">=</span> <span class="n">cloud</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">rt_output</span> <span class="o">=</span> <span class="n">rt</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">quiet</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;rt.options:&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">rt</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;rt.cloud:&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">rt</span><span class="o">.</span><span class="n">cloud</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">e</span>
+
+    <span class="k">return</span> <span class="n">rt_output</span></div>
+
+
+
+<div class="viewcode-block" id="get_ic_file">
+<a class="viewcode-back" href="../../radiative_transfer.html#simtrails.radiative_transfer.get_ic_file">[docs]</a>
+<span class="k">def</span> <span class="nf">get_ic_file</span><span class="p">(</span><span class="n">iwc</span><span class="p">,</span> <span class="n">altitude</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">eff_radius</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="s2">&quot;Clear&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate an ice cloud file and return its path.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        iwc: Ice water content (g/m^3)</span>
+<span class="sd">        altitude: Base altitude of the cloud (km)</span>
+<span class="sd">        depth: Thickness of the cloud (km)</span>
+<span class="sd">        eff_radius: Effective radius of the cloud particles (microns)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ic_file: Path to the generated ice cloud file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">tempfile</span>
+    <span class="kn">from</span> <span class="nn">simtrails.forcing</span> <span class="kn">import</span> <span class="n">get_tau</span>
+
+    <span class="n">top</span> <span class="o">=</span> <span class="n">altitude</span> <span class="o">+</span> <span class="p">(</span><span class="n">depth</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>  <span class="c1"># km</span>
+    <span class="n">bottom</span> <span class="o">=</span> <span class="n">altitude</span> <span class="o">-</span> <span class="p">(</span><span class="n">depth</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>  <span class="c1"># km</span>
+    <span class="n">cirrus_top</span> <span class="o">=</span> <span class="mf">8.0</span>  <span class="c1"># km</span>
+    <span class="n">cirrus_bottom</span> <span class="o">=</span> <span class="mf">7.5</span>  <span class="c1"># km</span>
+    <span class="c1"># cirrus_iwc = 0.05  # g/m^3 - 5um cirruc</span>
+    <span class="c1"># cirrus_eff_radius = 5.0  # microns - parameterisation overlap</span>
+    <span class="n">cirrus_iwc</span> <span class="o">=</span> <span class="mf">0.25</span>  <span class="c1"># g/m^3 - 30um cirrus</span>
+    <span class="n">cirrus_eff_radius</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="mf">30.0</span>  <span class="c1"># microns - calculated specially for mie tables (revisions)</span>
+    <span class="p">)</span>
+
+    <span class="n">cloudstr</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">top</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> 0 0&quot;</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">bottom</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">iwc</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">eff_radius</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">background</span> <span class="o">==</span> <span class="s2">&quot;8km_cirrus&quot;</span><span class="p">:</span>
+        <span class="n">bgstr</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">cirrus_top</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> 0.0    0.0&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">cirrus_bottom</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">cirrus_iwc</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">cirrus_eff_radius</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="c1"># no overlap cases</span>
+        <span class="k">if</span> <span class="n">bottom</span> <span class="o">&gt;</span> <span class="n">cirrus_top</span><span class="p">:</span>
+            <span class="n">cloudstr</span> <span class="o">=</span> <span class="n">cloudstr</span> <span class="o">+</span> <span class="n">bgstr</span>
+        <span class="k">elif</span> <span class="n">top</span> <span class="o">&lt;</span> <span class="n">cirrus_bottom</span><span class="p">:</span>
+            <span class="n">cloudstr</span> <span class="o">=</span> <span class="n">bgstr</span> <span class="o">+</span> <span class="n">cloudstr</span>
+        <span class="c1"># overlap cases</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">overlap_bottom</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">cirrus_bottom</span><span class="p">,</span> <span class="n">bottom</span><span class="p">)</span>
+            <span class="n">overlap_top</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">cirrus_top</span><span class="p">,</span> <span class="n">top</span><span class="p">)</span>
+
+            <span class="n">tau_contrail_overlap</span> <span class="o">=</span> <span class="n">get_tau</span><span class="p">(</span>
+                <span class="n">iwc</span><span class="o">=</span><span class="n">iwc</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="n">overlap_top</span> <span class="o">-</span> <span class="n">overlap_bottom</span><span class="p">,</span> <span class="n">eff_radius</span><span class="o">=</span><span class="n">eff_radius</span>
+            <span class="p">)</span>
+            <span class="n">tau_cirrus_overlap</span> <span class="o">=</span> <span class="n">get_tau</span><span class="p">(</span>
+                <span class="n">iwc</span><span class="o">=</span><span class="n">cirrus_iwc</span><span class="p">,</span>
+                <span class="n">depth</span><span class="o">=</span><span class="n">overlap_top</span> <span class="o">-</span> <span class="n">overlap_bottom</span><span class="p">,</span>
+                <span class="n">eff_radius</span><span class="o">=</span><span class="n">cirrus_eff_radius</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">current_layer</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span>
+            <span class="c1"># work out the layers</span>
+            <span class="n">cloudstr</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="c1"># enter bottom layer</span>
+            <span class="k">if</span> <span class="n">bottom</span> <span class="o">&lt;</span> <span class="n">cirrus_bottom</span><span class="p">:</span>
+                <span class="c1"># some contrail below background cirrus start</span>
+                <span class="n">cloudstr</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">bottom</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">iwc</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">eff_radius</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">cloudstr</span>
+                <span class="n">current_layer</span> <span class="o">=</span> <span class="s2">&quot;contrail&quot;</span>
+            <span class="k">elif</span> <span class="n">overlap_bottom</span> <span class="o">&gt;</span> <span class="n">cirrus_bottom</span><span class="p">:</span>
+                <span class="c1"># some background cirrus below contrail</span>
+                <span class="n">cloudstr</span> <span class="o">=</span> <span class="n">bgstr</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">+</span> <span class="n">cloudstr</span>
+                <span class="n">current_layer</span> <span class="o">=</span> <span class="s2">&quot;cirrus&quot;</span>
+
+            <span class="c1"># enter overlap layer</span>
+            <span class="n">dominant_layer</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;contrail&quot;</span> <span class="k">if</span> <span class="n">tau_contrail_overlap</span> <span class="o">&gt;</span> <span class="n">tau_cirrus_overlap</span> <span class="k">else</span> <span class="s2">&quot;cirrus&quot;</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">dominant_layer</span> <span class="o">==</span> <span class="s2">&quot;contrail&quot;</span> <span class="ow">and</span> <span class="n">current_layer</span> <span class="o">!=</span> <span class="s2">&quot;contrail&quot;</span><span class="p">:</span>
+                <span class="c1"># contrail dominant overlap layer</span>
+                <span class="n">cloudstr</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">overlap_bottom</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">iwc</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">eff_radius</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">]</span> <span class="o">+</span> <span class="n">cloudstr</span>
+                <span class="n">current_layer</span> <span class="o">=</span> <span class="s2">&quot;contrail&quot;</span>
+            <span class="k">elif</span> <span class="n">dominant_layer</span> <span class="o">==</span> <span class="s2">&quot;cirrus&quot;</span> <span class="ow">and</span> <span class="n">current_layer</span> <span class="o">!=</span> <span class="s2">&quot;cirrus&quot;</span><span class="p">:</span>
+                <span class="c1"># background cirrus dominant overlap layer</span>
+                <span class="n">cloudstr</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">overlap_bottom</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">cirrus_iwc</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">cirrus_eff_radius</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">]</span> <span class="o">+</span> <span class="n">cloudstr</span>
+                <span class="n">current_layer</span> <span class="o">=</span> <span class="s2">&quot;cirrus&quot;</span>
+
+            <span class="c1"># exit overlap layer</span>
+            <span class="n">dominant_layer</span> <span class="o">=</span> <span class="s2">&quot;contrail&quot;</span> <span class="k">if</span> <span class="n">top</span> <span class="o">&gt;</span> <span class="n">cirrus_top</span> <span class="k">else</span> <span class="s2">&quot;cirrus&quot;</span>
+            <span class="k">if</span> <span class="n">top</span> <span class="o">==</span> <span class="n">cirrus_top</span><span class="p">:</span>
+                <span class="n">dominant_layer</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span>
+            <span class="k">if</span> <span class="n">dominant_layer</span> <span class="o">==</span> <span class="s2">&quot;cirrus&quot;</span> <span class="ow">and</span> <span class="n">current_layer</span> <span class="o">!=</span> <span class="s2">&quot;cirrus&quot;</span><span class="p">:</span>
+                <span class="c1"># return to background cirrus</span>
+                <span class="n">cloudstr</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">overlap_top</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">cirrus_iwc</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">cirrus_eff_radius</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">]</span> <span class="o">+</span> <span class="n">cloudstr</span>
+                <span class="c1"># cloudstr = bgstr[:1] + cloudstr</span>
+            <span class="k">elif</span> <span class="n">dominant_layer</span> <span class="o">==</span> <span class="s2">&quot;contrail&quot;</span> <span class="ow">and</span> <span class="n">current_layer</span> <span class="o">!=</span> <span class="s2">&quot;contrail&quot;</span><span class="p">:</span>
+                <span class="c1"># some contrail above background cirrus end</span>
+                <span class="n">cloudstr</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">overlap_top</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">iwc</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">eff_radius</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">cloudstr</span>
+
+            <span class="c1"># exit top layer</span>
+            <span class="k">if</span> <span class="n">dominant_layer</span> <span class="o">==</span> <span class="s2">&quot;contrail&quot;</span><span class="p">:</span>
+                <span class="n">cloudstr</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">top</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> 0.0 0.0&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">cloudstr</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">cloudstr</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">cirrus_top</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> 0.0 0.0&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">cloudstr</span>
+
+    <span class="n">cloudstr</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cloudstr</span><span class="p">)</span>
+    <span class="n">tmpcloud</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span>
+        <span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;tempfiles&quot;</span>
+    <span class="p">)</span>
+    <span class="n">tmpcloud</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">cloudstr</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;ascii&quot;</span><span class="p">))</span>
+    <span class="n">tmpcloud</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">tmpcloud</span><span class="o">.</span><span class="n">name</span></div>
+
+
+
+<div class="viewcode-block" id="scene_rt_kwargs">
+<a class="viewcode-back" href="../../radiative_transfer.html#simtrails.radiative_transfer.scene_rt_kwargs">[docs]</a>
+<span class="k">def</span> <span class="nf">scene_rt_kwargs</span><span class="p">(</span><span class="n">ic_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">eff_radius</span><span class="o">=</span><span class="mf">20.0</span><span class="p">,</span> <span class="n">atmosphere_file</span><span class="o">=</span><span class="s2">&quot;us&quot;</span><span class="p">,</span> <span class="n">hour</span><span class="o">=</span><span class="mi">12</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate keyword arguments for running the radiative transfer model for a scene.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        ic_file: Path to the ice cloud file (optional)</span>
+<span class="sd">        eff_radius: Effective radius of the cloud particles (microns)</span>
+<span class="sd">        atmosphere_file: Name of the atmosphere file (default: &quot;us&quot;)</span>
+<span class="sd">        hour: Hour of the day (default: 12)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        rt_kwargs: Dictionary of keyword arguments for the radiative transfer model</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rt_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">ic_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">rt_kwargs</span><span class="p">[</span><span class="s2">&quot;ic_file&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;1D &quot;</span><span class="si">{</span><span class="n">ic_file</span><span class="si">}</span><span class="s1">&quot;&#39;</span>
+        <span class="k">if</span> <span class="n">eff_radius</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">:</span>
+            <span class="n">rt_kwargs</span><span class="p">[</span><span class="s2">&quot;ic_properties&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;yang2013 interpolate&quot;</span>
+            <span class="n">rt_kwargs</span><span class="p">[</span><span class="s2">&quot;ic_habit_yang2013&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;droxtal smooth&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ic_properties_file</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;data&quot;</span> <span class="o">/</span> <span class="s2">&quot;ic.gamma_001.0.mie.cdf&quot;</span>
+            <span class="p">)</span>
+            <span class="n">rt_kwargs</span><span class="p">[</span><span class="s2">&quot;ic_properties&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ic_properties_file</span><span class="si">}</span><span class="s2"> interpolate&quot;</span>
+    <span class="n">rt_kwargs</span><span class="p">[</span><span class="s2">&quot;atmosphere_file&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">Atmosphere</span><span class="o">.</span><span class="n">from_name</span><span class="p">(</span><span class="n">atmosphere_file</span><span class="p">)</span><span class="o">.</span><span class="n">afgl_file</span><span class="p">)</span>
+    <span class="n">rt_kwargs</span><span class="p">[</span><span class="s2">&quot;latitude&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;N </span><span class="si">{</span><span class="n">LATITUDES</span><span class="p">[</span><span class="n">atmosphere_file</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">rt_kwargs</span><span class="p">[</span><span class="s2">&quot;longitude&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;E </span><span class="si">{</span><span class="n">LONGITUDES</span><span class="p">[</span><span class="n">atmosphere_file</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">rt_kwargs</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;2023 </span><span class="si">{</span><span class="n">DATES</span><span class="p">[</span><span class="n">atmosphere_file</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">hour</span><span class="si">:</span><span class="s2">02</span><span class="si">}</span><span class="s2"> 00 00&quot;</span>
+    <span class="k">return</span> <span class="n">rt_kwargs</span></div>
+
+
+
+<div class="viewcode-block" id="brightness_temperature">
+<a class="viewcode-back" href="../../radiative_transfer.html#simtrails.radiative_transfer.brightness_temperature">[docs]</a>
+<span class="k">def</span> <span class="nf">brightness_temperature</span><span class="p">(</span>
+    <span class="n">wvl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wvn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">radiance_wvl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">radiance_wvn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">radiance_nu</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the brightness temperature.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        wvl: Wavelength (microns)</span>
+<span class="sd">        wvn: Wavenumber (cm^-1)</span>
+<span class="sd">        nu: Frequency (Hz)</span>
+<span class="sd">        radiance_wvl: Radiance with respect to wavelength (W/m^2/sr/micron)</span>
+<span class="sd">        radiance_wvn: Radiance with respect to wavenumber (W/m^2/sr/cm^-1)</span>
+<span class="sd">        radiance_nu: Radiance with respect to frequency (W/m^2/sr/Hz)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        brightness_temp: Brightness temperature (K)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">scipy.constants</span> <span class="kn">import</span> <span class="n">c</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">k</span>
+
+    <span class="k">if</span> <span class="p">[</span><span class="n">wvl</span><span class="p">,</span> <span class="n">wvn</span><span class="p">,</span> <span class="n">nu</span><span class="p">]</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Exactly one of wvl, wvn, nu must be specified&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">[</span><span class="n">radiance_wvl</span><span class="p">,</span> <span class="n">radiance_wvn</span><span class="p">,</span> <span class="n">radiance_nu</span><span class="p">]</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Exactly one of radiance_wvl, radiance_wvn, radiance_nu must be specified&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">nu</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">wvl</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">nu</span> <span class="o">=</span> <span class="n">c</span> <span class="o">/</span> <span class="n">wvl</span>
+        <span class="k">elif</span> <span class="n">wvn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">nu</span> <span class="o">=</span> <span class="n">c</span> <span class="o">*</span> <span class="n">wvn</span>
+
+    <span class="k">if</span> <span class="n">radiance_nu</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">radiance_wvl</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">radiance_nu</span> <span class="o">=</span> <span class="n">radiance_wvl</span> <span class="o">*</span> <span class="n">c</span> <span class="o">/</span> <span class="n">nu</span><span class="o">**</span><span class="mi">2</span>
+        <span class="k">elif</span> <span class="n">radiance_wvn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">radiance_nu</span> <span class="o">=</span> <span class="n">radiance_wvn</span> <span class="o">/</span> <span class="n">c</span>
+
+    <span class="k">return</span> <span class="n">h</span> <span class="o">*</span> <span class="n">nu</span> <span class="o">/</span> <span class="n">k</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">h</span> <span class="o">*</span> <span class="n">nu</span><span class="o">**</span><span class="mi">3</span> <span class="o">/</span> <span class="n">c</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="n">radiance_nu</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># def get_optical_depth(cwc, eff_radius, depth, method=&quot;k&quot;):</span>
+<span class="c1">#     &quot;&quot;&quot;</span>
+<span class="c1">#     Compute the optical depth of a cloud.</span>
+
+<span class="c1">#     Currently unused.</span>
+
+<span class="c1">#     Parameters:</span>
+<span class="c1">#     - cwc: Cloud water content (g/m^3)</span>
+<span class="c1">#     - eff_radius: Effective radius of the cloud particles (microns)</span>
+<span class="c1">#     - depth: Thickness of the cloud (km)</span>
+<span class="c1">#     - method: Method for computing optical depth (default: &quot;k&quot;)</span>
+
+<span class="c1">#     Returns:</span>
+<span class="c1">#     - optical_depth: Optical depth of the cloud (km^-1 * km)</span>
+<span class="c1">#     &quot;&quot;&quot;</span>
+<span class="c1">#     cloud = Cloud(LIBRADTRAN_FOLDER, cwc, eff_radius)</span>
+<span class="c1">#     prop = cloud.cldprp(550, method=method)</span>
+<span class="c1">#     return prop.ext * depth</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Oliver Driver.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

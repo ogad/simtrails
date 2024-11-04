@@ -1,0 +1,32 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "simtrails"
+version = "1.0"
+authors = [
+  { name="Oliver Driver", email="o.driver22@imperial.ac.uk" },
+]
+description = "Contrail simulation and observability analysis"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "xarray",
+    "matplotlib",
+    "cartopy",
+    "seaborn",
+    "pandas",
+    "tqdm",
+    "scipy",
+    "scikit-image",
+    "pathos",
+    "geopandas",
+    "google_cloud_storage",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+]

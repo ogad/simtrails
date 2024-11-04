@@ -1,0 +1,350 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>simtrails.imager &mdash; Simtrails  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Simtrails
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../usage/installation.html">Installation and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../detectables.html">Detectables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../imagers.html">Imagers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../detectors.html">Detectors and Sensitivity Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sensitivity_result.html">Sensitivity test results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../radiative_transfer.html">Radiative Transfer and lookup tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../detection_algorithms.html">Contrail Detection Algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mannstein.html">Mannstein line-filtering algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cocip.html">CoCiP Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../misc.html">Miscellaneous</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Simtrails</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">simtrails.imager</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for simtrails.imager</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+<span class="kn">from</span> <span class="nn">numpy.typing</span> <span class="kn">import</span> <span class="n">ArrayLike</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">simtrails.detectable</span> <span class="kn">import</span> <span class="n">Detectable</span>
+
+
+<div class="viewcode-block" id="Imager">
+<a class="viewcode-back" href="../../imagers.html#simtrails.imager.Imager">[docs]</a>
+<span class="k">class</span> <span class="nc">Imager</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The Imager class represents an imager used for simulating observations of detectable objects.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        channels (dict[int, ImagerChannel]): A dictionary of imager channels, where the key is the channel index</span>
+<span class="sd">            and the value is an instance of ImagerChannel.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channels</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">ImagerChannel</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">channels</span> <span class="o">=</span> <span class="n">channels</span>
+
+<div class="viewcode-block" id="Imager.from_name">
+<a class="viewcode-back" href="../../imagers.html#simtrails.imager.Imager.from_name">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Imager</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns an instance of Imager based on the given name.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name (str): The name of the imager.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Imager: An instance of Imager.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            NotImplementedError: If the imager with the given name is not implemented.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;GOES_R_ABI&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">GOES_R_ABI</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Imager </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> not implemented&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Imager.simulate_observation">
+<a class="viewcode-back" href="../../imagers.html#simtrails.imager.Imager.simulate_observation">[docs]</a>
+    <span class="k">def</span> <span class="nf">simulate_observation</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">detectable</span><span class="p">:</span> <span class="n">Detectable</span><span class="p">,</span> <span class="n">i_channel</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">pbar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Simulates an observation of a detectable object using the specified imager channel.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            detectable (Detectable): The detectable object to simulate the observation for.</span>
+<span class="sd">            i_channel (int): The number of the imager channel to use for the observation; i_channel=0 corresponds to</span>
+<span class="sd">                the raw scene grid values.</span>
+<span class="sd">            pbar (optional): A progress bar object to update during the simulation.</span>
+<span class="sd">            shape (optional): The desired shape of the output observation grid.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ArrayLike: The simulated observation data.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the forced shape is smaller than the output grid.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rt_output</span> <span class="o">=</span> <span class="n">detectable</span><span class="o">.</span><span class="n">get_rt_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i_channel</span><span class="p">)</span>
+
+        <span class="n">data_output_grid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">[</span><span class="n">i_channel</span><span class="p">]</span><span class="o">.</span><span class="n">regrid_observable</span><span class="p">(</span>
+            <span class="n">rt_output</span><span class="p">,</span> <span class="n">detectable</span><span class="o">.</span><span class="n">grid_resolution</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">data_output_grid</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="ow">or</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">data_output_grid</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Forced shape </span><span class="si">{</span><span class="n">shape</span><span class="si">}</span><span class="s2"> is smaller than the output grid </span><span class="si">{</span><span class="n">data_output_grid</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+            <span class="n">bg_value</span> <span class="o">=</span> <span class="n">detectable</span><span class="o">.</span><span class="n">output_from_values</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">i_channel</span><span class="p">)</span>
+            <span class="n">resized_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">*</span> <span class="n">bg_value</span>
+            <span class="n">resized_grid</span><span class="p">[:</span> <span class="n">data_output_grid</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">:</span> <span class="n">data_output_grid</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">data_output_grid</span>
+            <span class="p">)</span>
+            <span class="n">data_output_grid</span> <span class="o">=</span> <span class="n">resized_grid</span>
+
+        <span class="n">output_with_noise</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">[</span><span class="n">i_channel</span><span class="p">]</span><span class="o">.</span><span class="n">apply_noise</span><span class="p">(</span><span class="n">data_output_grid</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">pbar</span><span class="p">:</span>
+            <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">output_with_noise</span></div>
+
+
+<div class="viewcode-block" id="Imager.get_rt_options">
+<a class="viewcode-back" href="../../imagers.html#simtrails.imager.Imager.get_rt_options">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_rt_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i_channel</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the options for radiative transfer simulation for the specified imager channel.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            i_channel (int): The index of the imager channel.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: The options for radiative transfer simulation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="nb">vars</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">[</span><span class="n">i_channel</span><span class="p">]))</span>
+        <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;noise_equiv_temp_diff&quot;</span><span class="p">)</span>
+        <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;resolution&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">options</span></div>
+</div>
+
+
+
+<span class="k">class</span> <span class="nc">GOESImager</span><span class="p">(</span><span class="n">Imager</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The GOESImager class represents a specific imager, the GOES-R ABI.</span>
+
+<span class="sd">    The GOESImager class can represent GOES-like satellites, but has variable resolution.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        resolution (float): The resolution of the imager channels in kilometers.</span>
+
+<span class="sd">    Methods:</span>
+<span class="sd">        __init__(self, resolution=0.5): Initializes a GOESImager instance with the specified resolution.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">nedt</span><span class="o">=</span><span class="mf">0.03</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="n">i</span><span class="p">:</span> <span class="n">ImagerChannel</span><span class="p">(</span><span class="s2">&quot;solar&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;reptran_channel goes-r_abi_ch</span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="o">|</span> <span class="p">{</span>
+                <span class="n">i</span><span class="p">:</span> <span class="n">ImagerChannel</span><span class="p">(</span><span class="s2">&quot;thermal&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;reptran_channel goes-r_abi_ch</span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">17</span><span class="p">)</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">i_channel</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">[</span><span class="n">i_channel</span><span class="p">]</span><span class="o">.</span><span class="n">resolution</span> <span class="o">=</span> <span class="n">resolution</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">[</span><span class="n">i_channel</span><span class="p">]</span><span class="o">.</span><span class="n">noise_equiv_temp_diff</span> <span class="o">=</span> <span class="n">nedt</span>
+
+
+<div class="viewcode-block" id="ImagerChannel">
+<a class="viewcode-back" href="../../imagers.html#simtrails.imager.ImagerChannel">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">ImagerChannel</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The ImagerChannel class represents a channel of an imager.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        source (str): The source (solar/thermal) of the channel.</span>
+<span class="sd">        mol_abs_param (str): The molecular absorption parameterisation of the channel.</span>
+<span class="sd">        noise_equiv_temp_diff (float): The noise equivalent temperature difference of the channel in Kelvin.</span>
+<span class="sd">        resolution (float): The resolution of the channel in kilometers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">source</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">mol_abs_param</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">noise_equiv_temp_diff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.03</span>  <span class="c1"># 0.15  # K</span>
+    <span class="n">resolution</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span>  <span class="c1"># km</span>
+    <span class="n">calib_temp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span>  <span class="c1"># K</span>
+
+<div class="viewcode-block" id="ImagerChannel.apply_noise">
+<a class="viewcode-back" href="../../imagers.html#simtrails.imager.ImagerChannel.apply_noise">[docs]</a>
+    <span class="k">def</span> <span class="nf">apply_noise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Applies noise to the given data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data (ArrayLike): The data to apply noise to.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ArrayLike: The data with noise applied.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+        <span class="n">noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_equiv_temp_diff</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">calib_error</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">calib_temp</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span> <span class="o">+</span> <span class="n">noise</span> <span class="o">+</span> <span class="n">calib_error</span></div>
+
+
+<div class="viewcode-block" id="ImagerChannel.regrid_observable">
+<a class="viewcode-back" href="../../imagers.html#simtrails.imager.ImagerChannel.regrid_observable">[docs]</a>
+    <span class="k">def</span> <span class="nf">regrid_observable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">data_resolution</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Regrids the observable data from the detectable grid to the specified resolution.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data (ArrayLike): The observable data to regrid.</span>
+<span class="sd">            data_resolution (float): The resolution of the data.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ArrayLike: The regridded data.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the data resolution is greater than the imager resolution.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">skimage.transform</span> <span class="kn">import</span> <span class="n">rescale</span>
+        <span class="kn">from</span> <span class="nn">skimage.transform</span> <span class="kn">import</span> <span class="n">downscale_local_mean</span>
+
+        <span class="k">if</span> <span class="n">data_resolution</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">data</span>
+
+        <span class="k">if</span> <span class="n">data_resolution</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolution</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Data resolution </span><span class="si">{</span><span class="n">data_resolution</span><span class="si">}</span><span class="s2"> is greater than imager resolution </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">resolution</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">data_resolution</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolution</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">data</span>
+
+        <span class="n">rescale_factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolution</span> <span class="o">/</span> <span class="n">data_resolution</span>
+        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">rescale_factor</span><span class="p">)</span> <span class="o">!=</span> <span class="n">rescale_factor</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Data resolution </span><span class="si">{</span><span class="n">data_resolution</span><span class="si">}</span><span class="s2"> is not a multiple of imager resolution </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">resolution</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="n">rescale_factor</span> <span class="o">=</span> <span class="n">data_resolution</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolution</span>
+            <span class="k">return</span> <span class="n">rescale</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">rescale_factor</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rescale_factor</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">rescale_factor</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">downscale_local_mean</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="n">rescale_factor</span><span class="p">,</span> <span class="n">rescale_factor</span><span class="p">))</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">reptran_channel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the reptran channel of the imager channel.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: The reptran channel.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol_abs_param</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
+
+
+
+<span class="n">GOES_R_ABI</span> <span class="o">=</span> <span class="n">GOESImager</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Oliver Driver.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

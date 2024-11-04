@@ -1,0 +1,611 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>simtrails.sensitivity_result &mdash; Simtrails  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Simtrails
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../usage/installation.html">Installation and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../detectables.html">Detectables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../imagers.html">Imagers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../detectors.html">Detectors and Sensitivity Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sensitivity_result.html">Sensitivity test results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../radiative_transfer.html">Radiative Transfer and lookup tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../detection_algorithms.html">Contrail Detection Algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mannstein.html">Mannstein line-filtering algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cocip.html">CoCiP Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../misc.html">Miscellaneous</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Simtrails</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">simtrails.sensitivity_result</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for simtrails.sensitivity_result</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+
+<div class="viewcode-block" id="SensitivityResult">
+<a class="viewcode-back" href="../../sensitivity_result.html#simtrails.sensitivity_result.SensitivityResult">[docs]</a>
+<span class="k">class</span> <span class="nc">SensitivityResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class representing the results of a sensitivity analysis.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        data (xr.Dataset): The dataset containing the sensitivity analysis results.</span>
+<span class="sd">            Constructed by passing args and kwargs to xr.Dataset.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SensitivityResult.from_name">
+<a class="viewcode-back" href="../../sensitivity_result.html#simtrails.sensitivity_result.SensitivityResult.from_name">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">n_proc</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a SensitivityResult object from a given name.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            name (str): The name of the dataset.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            cls: An instance of the sensitivity result.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">simtrails.sensitivity_test</span> <span class="kn">import</span> <span class="n">CDASensitivityTest</span><span class="p">,</span> <span class="n">InstanceGenerator</span>
+        <span class="kn">from</span> <span class="nn">simtrails.contrail</span> <span class="kn">import</span> <span class="n">Contrail</span><span class="p">,</span> <span class="n">GaussianContrail</span>
+        <span class="kn">from</span> <span class="nn">simtrails.contrail_detector</span> <span class="kn">import</span> <span class="n">GOESMannsteinDetector</span>
+        <span class="kn">from</span> <span class="nn">simtrails.saved_sensitivities</span> <span class="kn">import</span> <span class="n">saved_sensitivities</span>
+
+        <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span>
+            <span class="n">version</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">:])</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">version</span> <span class="o">=</span> <span class="n">saved_sensitivities</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;version&quot;</span><span class="p">]</span>
+
+        <span class="n">properties</span> <span class="o">=</span> <span class="n">saved_sensitivities</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;properties&quot;</span><span class="p">]</span>
+        <span class="n">contrail_parameters</span> <span class="o">=</span> <span class="n">saved_sensitivities</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;contrail_properties&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">n_repeats</span> <span class="o">=</span> <span class="n">saved_sensitivities</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;repeats&quot;</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="n">detectable_class</span> <span class="o">=</span> <span class="n">saved_sensitivities</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;class&quot;</span><span class="p">,</span> <span class="s2">&quot;Contrail&quot;</span><span class="p">)</span>
+        <span class="n">cda_properties</span> <span class="o">=</span> <span class="n">saved_sensitivities</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cda_properties&quot;</span><span class="p">,</span> <span class="p">{})</span>
+
+        <span class="n">filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_v</span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2">.nc&quot;</span>
+        <span class="n">filepath</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;data&quot;</span> <span class="o">/</span> <span class="s2">&quot;sensitivity_results&quot;</span> <span class="o">/</span> <span class="n">filename</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">filepath</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_properties</span><span class="p">(</span>
+                <span class="n">properties</span><span class="p">,</span>
+                <span class="n">n_repeats</span><span class="p">,</span>
+                <span class="n">detectable_class</span><span class="p">,</span>
+                <span class="n">n_proc</span><span class="p">,</span>
+                <span class="n">cda_properties</span><span class="o">=</span><span class="n">cda_properties</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">contrail_parameters</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SensitivityResult.from_properties">
+<a class="viewcode-back" href="../../sensitivity_result.html#simtrails.sensitivity_result.SensitivityResult.from_properties">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_properties</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">properties</span><span class="p">,</span>
+        <span class="n">n_repeats</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+        <span class="n">detectable_class</span><span class="o">=</span><span class="s2">&quot;GaussianContrail&quot;</span><span class="p">,</span>
+        <span class="n">n_proc</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+        <span class="n">cda_properties</span><span class="o">=</span><span class="p">{},</span>
+        <span class="o">**</span><span class="n">contrail_propeties</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a SensitivityResult object from a given set of properties by running a sensitivity test.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            properties (dict): The properties of the sensitivity test.</span>
+<span class="sd">            n_repeats (int): The number of repeats for the sensitivity test.</span>
+<span class="sd">            detector_class (class): The class</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            cls: An instance of the sensitivity result.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">simtrails.contrail</span> <span class="kn">import</span> <span class="n">Contrail</span><span class="p">,</span> <span class="n">GaussianContrail</span>
+        <span class="kn">from</span> <span class="nn">simtrails.contrail_detector</span> <span class="kn">import</span> <span class="n">GOESMannsteinDetector</span>
+        <span class="kn">from</span> <span class="nn">simtrails.sensitivity_test</span> <span class="kn">import</span> <span class="n">CDASensitivityTest</span><span class="p">,</span> <span class="n">InstanceGenerator</span>
+
+        <span class="k">if</span> <span class="n">detectable_class</span> <span class="o">==</span> <span class="s2">&quot;Contrail&quot;</span><span class="p">:</span>
+            <span class="n">detectable_class</span> <span class="o">=</span> <span class="n">Contrail</span>
+        <span class="k">elif</span> <span class="n">detectable_class</span> <span class="o">==</span> <span class="s2">&quot;GaussianContrail&quot;</span><span class="p">:</span>
+            <span class="n">detectable_class</span> <span class="o">=</span> <span class="n">GaussianContrail</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown detectable class </span><span class="si">{</span><span class="n">detectable_class</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">test</span> <span class="o">=</span> <span class="n">CDASensitivityTest</span><span class="p">(</span>
+            <span class="n">detector_generator</span><span class="o">=</span><span class="n">GOESMannsteinDetector</span><span class="p">,</span>
+            <span class="n">detectable_generator</span><span class="o">=</span><span class="n">InstanceGenerator</span><span class="p">(</span>
+                <span class="n">detectable_class</span><span class="p">,</span> <span class="o">**</span><span class="n">contrail_propeties</span>
+            <span class="p">),</span>
+            <span class="n">cda_properties</span><span class="o">=</span><span class="n">cda_properties</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">test</span><span class="o">.</span><span class="n">repeats</span><span class="p">(</span><span class="n">n_repeats</span><span class="p">,</span> <span class="n">properties</span><span class="p">,</span> <span class="n">n_proc</span><span class="o">=</span><span class="n">n_proc</span><span class="p">)</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">add_area</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+
+    <span class="c1"># TODO: this is broken, needs reworking for muliple optical depth drivers</span>
+<div class="viewcode-block" id="SensitivityResult.swap_dims_optical_depth">
+<a class="viewcode-back" href="../../sensitivity_result.html#simtrails.sensitivity_result.SensitivityResult.swap_dims_optical_depth">[docs]</a>
+    <span class="k">def</span> <span class="nf">swap_dims_optical_depth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Deprecated&quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;optical_depth&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s2">&quot;optical_depth&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot swap dimensions if optical depth is not present.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">swap_dims</span><span class="p">({</span><span class="s2">&quot;iwc&quot;</span><span class="p">:</span> <span class="s2">&quot;optical_depth&quot;</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="SensitivityResult.plot_series">
+<a class="viewcode-back" href="../../sensitivity_result.html#simtrails.sensitivity_result.SensitivityResult.plot_series">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot_series</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">var1</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>  <span class="c1"># Variable | str,</span>
+        <span class="n">var2</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;resolution&quot;</span><span class="p">,</span>  <span class="c1"># Variable | str = Variable.RESOLUTION,</span>
+        <span class="n">var3</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># Variable | str = None,</span>
+        <span class="n">y_var</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;area&quot;</span><span class="p">,</span>  <span class="c1"># Variable.AREA,</span>
+        <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot series of data based on specified variables.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            var1 (Variable or str): The x-axis variable to plot.</span>
+<span class="sd">            var2 (Variable or str, optional): The hue variable to plot. Defaults to Variable.RESOLUTION.</span>
+<span class="sd">            var3 (Variable or str, optional): The multi-axis variable. Defaults to None.</span>
+<span class="sd">            y_var (Variable, optional): The variable to plot on the y-axis. Defaults to Variable.AREA.</span>
+<span class="sd">            ax (matplotlib.axes.Axes or list of Axes, optional): The axes to plot on. Defaults to None.</span>
+<span class="sd">            **kwargs: Additional keyword arguments to be passed to the plotting functions.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the number of axes does not equal the number of resultant plots.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+        <span class="c1"># if isinstance(var1, str):</span>
+        <span class="c1">#     var1 = Variable[var1.upper()]</span>
+        <span class="c1"># if isinstance(y_var, str):</span>
+        <span class="c1">#     y_var = Variable[y_var.upper()]</span>
+        <span class="c1"># if isinstance(var2, str):</span>
+        <span class="c1">#     var2 = Variable[var2.upper()]</span>
+        <span class="c1"># if isinstance(var3, str):</span>
+        <span class="c1">#     var3 = Variable[var3.upper()]</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">var1</span> <span class="o">==</span> <span class="s2">&quot;optical_depth&quot;</span> <span class="ow">or</span> <span class="n">y_var</span> <span class="o">==</span> <span class="s2">&quot;optical_depth&quot;</span>
+        <span class="p">):</span>  <span class="c1"># Variable.OPTICAL_DEPTH or y_var == Variable.OPTICAL_DEPTH:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">swap_dims_optical_depth</span><span class="p">()</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ds_to_plot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">ds_to_plot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">var3</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">plotting_datasets</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">val</span><span class="p">:</span> <span class="n">ds_to_plot</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">var3</span><span class="p">):</span> <span class="n">val</span><span class="p">})</span>
+                <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">ds_to_plot</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">var3</span><span class="p">)]</span><span class="o">.</span><span class="n">values</span>
+            <span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">plotting_datasets</span> <span class="o">=</span> <span class="p">{</span><span class="kc">None</span><span class="p">:</span> <span class="n">ds_to_plot</span><span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">figs</span> <span class="o">=</span> <span class="p">[</span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">plotting_datasets</span><span class="p">))]</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="p">[</span><span class="n">fig</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span> <span class="k">for</span> <span class="n">fig</span> <span class="ow">in</span> <span class="n">figs</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">):</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="p">[</span><span class="n">ax</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="n">ax</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">plotting_datasets</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Number of axes (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span><span class="si">}</span><span class="s2">) must equal number of resultant plots (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">plotting_datasets</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="p">)</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">to_plot</span><span class="p">),</span> <span class="n">ax</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">plotting_datasets</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">axes</span><span class="p">):</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">lineplot</span><span class="p">(</span>
+                <span class="n">y</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">y_var</span><span class="p">),</span>
+                <span class="n">x</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">var1</span><span class="p">),</span>
+                <span class="n">hue</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">var2</span><span class="p">),</span>
+                <span class="n">data</span><span class="o">=</span><span class="n">to_plot</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(),</span>
+                <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+                <span class="c1"># **kwargs,</span>
+            <span class="p">)</span>
+            <span class="n">sns</span><span class="o">.</span><span class="n">scatterplot</span><span class="p">(</span>
+                <span class="n">x</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">var1</span><span class="p">),</span>
+                <span class="n">y</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">y_var</span><span class="p">),</span>
+                <span class="n">hue</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">var2</span><span class="p">),</span>
+                <span class="n">data</span><span class="o">=</span><span class="n">to_plot</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(),</span>
+                <span class="n">s</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+                <span class="n">legend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="n">var1</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="n">y_var</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">get_legend</span><span class="p">()</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">var2</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">title</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">var3</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SensitivityResult.plot_2d">
+<a class="viewcode-back" href="../../sensitivity_result.html#simtrails.sensitivity_result.SensitivityResult.plot_2d">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot_2d</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">var1</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>  <span class="c1"># Variable | str,</span>
+        <span class="n">var2</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>  <span class="c1"># Variable | str,</span>
+        <span class="n">hue_var</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;area&quot;</span><span class="p">,</span>  <span class="c1"># Variable | str = Variable.AREA,</span>
+        <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;Reds&quot;</span><span class="p">,</span>
+        <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">tau_locator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot a 2D heatmap of the specified variables.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            var1 (Variable or str): The x-axis variable to plot.</span>
+<span class="sd">            var2 (Variable or str): The y-axis variable to plot.</span>
+<span class="sd">            hue_var (Variable or str, optional): The variable to use for coloring the heatmap. Defaults to Variable.AREA.</span>
+<span class="sd">            cmap (str, optional): The colormap to use for the heatmap. Defaults to &quot;Reds&quot;.</span>
+<span class="sd">            ax (matplotlib.axes.Axes, optional): The axes on which to plot the heatmap. If not provided, a new figure will be created.</span>
+<span class="sd">            **kwargs: Additional keyword arguments to customize the plot.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            heatmaps (List[matplotlib.axes.Axes]): The axes objects containing the heatmaps.</span>
+<span class="sd">            colorbars (List[matplotlib.colorbar.Colorbar]): The colorbar objects associated with the heatmaps.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># var1, var2, hue_var = [</span>
+        <span class="c1">#     var if isinstance(var, Variable) or var is None else Variable[var.upper()]</span>
+        <span class="c1">#     for var in [var1, var2, hue_var]</span>
+        <span class="c1"># ]</span>
+        <span class="kn">from</span> <span class="nn">simtrails.misc.plotting</span> <span class="kn">import</span> <span class="n">contour_taus</span><span class="p">,</span> <span class="n">DatasetPlot2D</span>
+
+        <span class="n">tau_params</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;depth&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;eff_radius&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iwc&quot;</span><span class="p">,</span>
+        <span class="p">]</span>  <span class="c1"># TODO: move to the same place as the other tau_params</span>
+        <span class="n">tau_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">tau_params</span><span class="p">}</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">v</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tau_kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">or</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="p">}</span>
+
+        <span class="n">heatmaps</span><span class="p">,</span> <span class="n">colorbars</span> <span class="o">=</span> <span class="n">DatasetPlot2D</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="s2">&quot;repeat&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+            <span class="n">var1</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
+            <span class="n">var2</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
+            <span class="n">plot_var</span><span class="o">=</span><span class="n">hue_var</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
+            <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span>
+            <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>  <span class="c1"># need to take out kwargs passed only for contour_taus</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="n">heatmaps</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">var1</span><span class="p">)</span>  <span class="c1"># .label)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">var2</span><span class="p">)</span>  <span class="c1"># .label)</span>
+
+            <span class="n">tau_params</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;depth&quot;</span><span class="p">,</span> <span class="s2">&quot;eff_radius&quot;</span><span class="p">,</span> <span class="s2">&quot;iwc&quot;</span><span class="p">,</span> <span class="s2">&quot;iwp&quot;</span><span class="p">]</span>
+            <span class="n">tau_params</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">p</span>
+                <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">tau_params</span>
+                <span class="k">if</span> <span class="n">p</span> <span class="o">!=</span> <span class="n">var1</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">and</span> <span class="n">p</span> <span class="o">!=</span> <span class="n">var2</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">tau_locator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">tau_kwargs</span><span class="p">[</span><span class="s2">&quot;locator&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tau_locator</span>
+            <span class="n">contour_taus</span><span class="p">(</span>
+                <span class="n">ax</span><span class="p">,</span>
+                <span class="n">var1</span><span class="p">,</span>
+                <span class="n">var2</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">tau_kwargs</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">cax</span> <span class="ow">in</span> <span class="n">colorbars</span><span class="p">:</span>
+            <span class="n">cax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">hue_var</span><span class="p">)</span>  <span class="c1"># .label)</span>
+
+        <span class="k">return</span> <span class="n">heatmaps</span><span class="p">,</span> <span class="n">colorbars</span></div>
+
+
+<div class="viewcode-block" id="SensitivityResult.save">
+<a class="viewcode-back" href="../../sensitivity_result.html#simtrails.sensitivity_result.SensitivityResult.save">[docs]</a>
+    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save the data to a NetCDF file.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            path (str): The path to save the NetCDF file.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">to_netcdf</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SensitivityResult.load">
+<a class="viewcode-back" href="../../sensitivity_result.html#simtrails.sensitivity_result.SensitivityResult.load">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load a sensitivity result from a given path.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            path (str): The path to the dataset.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            cls: An instance of the sensitivity result.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">simtrails.lookup</span> <span class="kn">import</span> <span class="n">RENAME_DICT</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">load_dataset</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">data_rename_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">RENAME_DICT</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">data</span><span class="p">}</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">data_rename_dict</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SensitivityResult.from_multiprocessed_repeats">
+<a class="viewcode-back" href="../../sensitivity_result.html#simtrails.sensitivity_result.SensitivityResult.from_multiprocessed_repeats">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_multiprocessed_repeats</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">ordered_parameters</span><span class="p">,</span>
+        <span class="n">values</span><span class="p">,</span>
+        <span class="n">n_repeats</span><span class="p">,</span>
+        <span class="n">repeat_detections</span><span class="p">,</span>
+        <span class="n">repeat_optical_depths</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kw_attrs</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a SensitivityResult object from multiprocessed repeat results.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            cls (class): The class of the SensitivityResult object.</span>
+<span class="sd">            multiprocessed_repeat_results (list): List of repeat results from multiprocessing.</span>
+<span class="sd">            ordered_parameters (list): List of ordered parameters.</span>
+<span class="sd">            values (dict): Dictionary of parameter values.</span>
+<span class="sd">            kw_attrs: Additional keyword arguments for the SensitivityResult object.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            SensitivityResult: The created SensitivityResult object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
+        <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">date</span>
+
+        <span class="n">repeat_detections</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">repeat_detections</span><span class="p">)</span>
+        <span class="n">repeat_detections</span> <span class="o">=</span> <span class="n">repeat_detections</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_repeats</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">if</span> <span class="n">repeat_optical_depths</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">repeat_optical_depths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">repeat_optical_depths</span><span class="p">)</span>
+            <span class="n">repeat_optical_depths</span> <span class="o">=</span> <span class="n">repeat_optical_depths</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_repeats</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="n">shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">n_repeats</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">parameter</span><span class="p">])</span> <span class="k">for</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="n">ordered_parameters</span>
+        <span class="p">]</span>
+        <span class="n">repeat_detections</span> <span class="o">=</span> <span class="n">repeat_detections</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">repeat_optical_depths</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">repeat_optical_depths</span> <span class="o">=</span> <span class="n">repeat_optical_depths</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="n">results</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;sensitivity_detections&quot;</span><span class="p">:</span> <span class="n">repeat_detections</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="n">repeat_optical_depths</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">results</span><span class="p">[</span><span class="s2">&quot;optical_depth&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">repeat_optical_depths</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">key</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span>
+                <span class="n">results</span><span class="p">[</span><span class="n">key</span><span class="p">],</span>
+                <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;repeat&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">ordered_parameters</span><span class="p">),</span>
+                <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repeat&quot;</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">repeat_detections</span><span class="p">)),</span> <span class="o">**</span><span class="n">values</span><span class="p">},</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">key</span><span class="p">,</span>
+                <span class="n">attrs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">date</span><span class="o">=</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">),</span> <span class="o">**</span><span class="n">kw_attrs</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="s2">&quot;iwc&quot;</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="p">)</span> <span class="ow">and</span> <span class="n">repeat_optical_depths</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># FIXME: optical depth is not a simple 1D function of IWC</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="s2">&quot;iwc&quot;</span><span class="p">}</span>
+            <span class="n">results</span><span class="p">[</span><span class="s2">&quot;optical_depth&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;optical_depth&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span><span class="o">**</span><span class="n">index</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">results</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SensitivityResult.from_array_repeats">
+<a class="viewcode-back" href="../../sensitivity_result.html#simtrails.sensitivity_result.SensitivityResult.from_array_repeats">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_array_repeats</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">array_output_folder</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load and combine multiple repeated result files into a single SensitivityResult object.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            cls: The class object.</span>
+<span class="sd">            array_output_folder: The folder path where the repeated result files are located.</span>
+<span class="sd">            save: A boolean indicating whether to save the combined result as a new file. Default is True.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            results: A SensitivityResult object containing the combined results.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            - The repeated result files should be in NetCDF format.</span>
+<span class="sd">            - The repeated result files should have names starting with ``repeated_result_``.</span>
+<span class="sd">            - The combined result will have expanded dimensions based on the dimensions present in the repeated result files.</span>
+<span class="sd">            - If save is True, the combined result will be saved as &quot;result.nc&quot; in the array_output_folder.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
+        <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">date</span>
+        <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+        <span class="kn">from</span> <span class="nn">glob</span> <span class="kn">import</span> <span class="n">glob</span>
+
+        <span class="n">array_output_folder</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">array_output_folder</span><span class="p">)</span>
+
+        <span class="n">repeat_result_files</span> <span class="o">=</span> <span class="n">glob</span><span class="p">(</span><span class="s2">&quot;repeated_result_*.nc&quot;</span><span class="p">,</span> <span class="n">root_dir</span><span class="o">=</span><span class="n">array_output_folder</span><span class="p">)</span>
+        <span class="n">repeat_results</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">array_output_folder</span> <span class="o">/</span> <span class="n">file</span><span class="p">)</span><span class="o">.</span><span class="n">data</span> <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">repeat_result_files</span>
+        <span class="p">]</span>
+        <span class="n">dims_to_expand</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">d</span>
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">repeat_results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">d</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">repeat_results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">dims</span>
+        <span class="p">]</span>
+        <span class="n">repeat_results</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">repeat_result</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">dims_to_expand</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">repeat_result</span> <span class="ow">in</span> <span class="n">repeat_results</span>
+        <span class="p">]</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">xr</span><span class="o">.</span><span class="n">combine_by_coords</span><span class="p">(</span><span class="n">repeat_results</span><span class="p">,</span> <span class="n">combine_attrs</span><span class="o">=</span><span class="s2">&quot;drop_conflicts&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">array_output_folder</span> <span class="o">/</span> <span class="s2">&quot;result.nc&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">results</span></div>
+
+
+<div class="viewcode-block" id="SensitivityResult.averaged_repeats">
+<a class="viewcode-back" href="../../sensitivity_result.html#simtrails.sensitivity_result.SensitivityResult.averaged_repeats">[docs]</a>
+    <span class="k">def</span> <span class="nf">averaged_repeats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the average of the data over repeated trials.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The mean value of the data over the &quot;repeat&quot; dimension.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="s2">&quot;repeat&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SensitivityResult.add_area">
+<a class="viewcode-back" href="../../sensitivity_result.html#simtrails.sensitivity_result.SensitivityResult.add_area">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_area</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates and adds the area to the data dictionary based on the sensitivity detections and resolution.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;area&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;sensitivity_detections&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">resolution</span><span class="o">**</span><span class="mi">2</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SensitivityResult.add_percent_area">
+<a class="viewcode-back" href="../../sensitivity_result.html#simtrails.sensitivity_result.SensitivityResult.add_percent_area">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_percent_area</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates and adds the percentage area to the data.</span>
+
+<span class="sd">        The percentage area is calculated by dividing the area of each data point</span>
+<span class="sd">        by the product of its length and width.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;percent_area&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;area&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;length&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;width&quot;</span><span class="p">]</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SensitivityResult.add_eff_width">
+<a class="viewcode-back" href="../../sensitivity_result.html#simtrails.sensitivity_result.SensitivityResult.add_eff_width">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_eff_width</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds the effective width in pixels to the data dictionary.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">expected_px</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">length</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">resolution</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;observability&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;sensitivity_detections&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">expected_px</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;eff_width&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;observability&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">resolution</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Oliver Driver.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

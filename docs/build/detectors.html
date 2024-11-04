@@ -1,0 +1,317 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Detectors and Sensitivity Tests &mdash; Simtrails  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Sensitivity test results" href="sensitivity_result.html" />
+    <link rel="prev" title="Imagers" href="imagers.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Simtrails
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="usage/installation.html">Installation and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="detectables.html">Detectables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="imagers.html">Imagers</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Detectors and Sensitivity Tests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#detectors">Detectors</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#simtrails.contrail_detector.ContrailDetector"><code class="docutils literal notranslate"><span class="pre">ContrailDetector</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#simtrails.contrail_detector.ContrailDetector.imager"><code class="docutils literal notranslate"><span class="pre">ContrailDetector.imager</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simtrails.contrail_detector.ContrailDetector.algorithm"><code class="docutils literal notranslate"><span class="pre">ContrailDetector.algorithm</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simtrails.contrail_detector.ContrailDetector.contrail_mask"><code class="docutils literal notranslate"><span class="pre">ContrailDetector.contrail_mask()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#simtrails.contrail_detector.GOESMannsteinDetector"><code class="docutils literal notranslate"><span class="pre">GOESMannsteinDetector</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#simtrails.contrail_detector.GOESMannsteinDetector.imager"><code class="docutils literal notranslate"><span class="pre">GOESMannsteinDetector.imager</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simtrails.contrail_detector.GOESMannsteinDetector.algorithm"><code class="docutils literal notranslate"><span class="pre">GOESMannsteinDetector.algorithm</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#sensitivity-tests">Sensitivity tests</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#simtrails.sensitivity_test.CDASensitivityTest"><code class="docutils literal notranslate"><span class="pre">CDASensitivityTest</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#simtrails.sensitivity_test.CDASensitivityTest.repeats"><code class="docutils literal notranslate"><span class="pre">CDASensitivityTest.repeats()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#simtrails.sensitivity_test.InstanceGenerator"><code class="docutils literal notranslate"><span class="pre">InstanceGenerator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#simtrails.sensitivity_test.InstanceGenerator.get_variations"><code class="docutils literal notranslate"><span class="pre">InstanceGenerator.get_variations()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sensitivity_result.html">Sensitivity test results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="radiative_transfer.html">Radiative Transfer and lookup tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="detection_algorithms.html">Contrail Detection Algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mannstein.html">Mannstein line-filtering algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cocip.html">CoCiP Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="misc.html">Miscellaneous</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Simtrails</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Detectors and Sensitivity Tests</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/detectors.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="detectors-and-sensitivity-tests">
+<h1>Detectors and Sensitivity Tests<a class="headerlink" href="#detectors-and-sensitivity-tests" title="Link to this heading"></a></h1>
+<section id="detectors">
+<h2>Detectors<a class="headerlink" href="#detectors" title="Link to this heading"></a></h2>
+<p>Detectors combine contrail detection algorithms with scenes and imagers to
+simulate the detectability of a contrail.</p>
+<dl class="py class" id="module-simtrails.contrail_detector">
+<dt class="sig sig-object py" id="simtrails.contrail_detector.ContrailDetector">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtrails.contrail_detector.</span></span><span class="sig-name descname"><span class="pre">ContrailDetector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">imager</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="imagers.html#simtrails.imager.Imager" title="simtrails.imager.Imager"><span class="pre">Imager</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">algorithm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="detection_algorithms.html#simtrails.detection_algorithms.ContrailDetectionAlgorithm" title="simtrails.detection_algorithms.ContrailDetectionAlgorithm"><span class="pre">ContrailDetectionAlgorithm</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtrails/contrail_detector.html#ContrailDetector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtrails.contrail_detector.ContrailDetector" title="Link to this definition"></a></dt>
+<dd><p>Class representing a contrail detector (imager-algorithm combination).</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simtrails.contrail_detector.ContrailDetector.imager">
+<span class="sig-name descname"><span class="pre">imager</span></span><a class="headerlink" href="#simtrails.contrail_detector.ContrailDetector.imager" title="Link to this definition"></a></dt>
+<dd><p>The imager used for capturing scenes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="imagers.html#simtrails.imager.Imager" title="simtrails.imager.Imager">Imager</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simtrails.contrail_detector.ContrailDetector.algorithm">
+<span class="sig-name descname"><span class="pre">algorithm</span></span><a class="headerlink" href="#simtrails.contrail_detector.ContrailDetector.algorithm" title="Link to this definition"></a></dt>
+<dd><p>The algorithm used for contrail detection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="detection_algorithms.html#simtrails.detection_algorithms.ContrailDetectionAlgorithm" title="simtrails.detection_algorithms.ContrailDetectionAlgorithm">ContrailDetectionAlgorithm</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simtrails.contrail_detector.ContrailDetector.contrail_mask">
+<span class="sig-name descname"><span class="pre">contrail_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scene</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="detectables.html#simtrails.detectable.Detectable" title="simtrails.detectable.Detectable"><span class="pre">Detectable</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">pbar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">plot_kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/simtrails/contrail_detector.html#ContrailDetector.contrail_mask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtrails.contrail_detector.ContrailDetector.contrail_mask" title="Link to this definition"></a></dt>
+<dd><p>Generates a contrail mask for a given detectable scene.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scene</strong> (<a class="reference internal" href="detectables.html#simtrails.detectable.Detectable" title="simtrails.detectable.Detectable"><em>Detectable</em></a>) – The scene to generate the contrail mask for.</p></li>
+<li><p><strong>pbar</strong> (<em>tqdm.tqdm</em><em>, </em><em>optional</em>) – Progress bar to display the progress of the contrail detection algorithm.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>) – Axes to plot the scene and contrail mask.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The contrail mask.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="simtrails.contrail_detector.GOESMannsteinDetector">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtrails.contrail_detector.</span></span><span class="sig-name descname"><span class="pre">GOESMannsteinDetector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">mannstein_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtrails/contrail_detector.html#GOESMannsteinDetector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtrails.contrail_detector.GOESMannsteinDetector" title="Link to this definition"></a></dt>
+<dd><p>A class representing a contrail detector using GOES imager and Mannstein algorithm.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simtrails.contrail_detector.GOESMannsteinDetector.imager">
+<span class="sig-name descname"><span class="pre">imager</span></span><a class="headerlink" href="#simtrails.contrail_detector.GOESMannsteinDetector.imager" title="Link to this definition"></a></dt>
+<dd><p>The GOES imager object used for contrail detection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="imagers.html#simtrails.imager.GOESImager" title="simtrails.imager.GOESImager">GOESImager</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simtrails.contrail_detector.GOESMannsteinDetector.algorithm">
+<span class="sig-name descname"><span class="pre">algorithm</span></span><a class="headerlink" href="#simtrails.contrail_detector.GOESMannsteinDetector.algorithm" title="Link to this definition"></a></dt>
+<dd><p>The Mannstein algorithm object used for contrail detection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="detection_algorithms.html#simtrails.detection_algorithms.MannsteinCDA" title="simtrails.detection_algorithms.MannsteinCDA">MannsteinCDA</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>resolution</strong> (<em>float</em>) – The resolution of the imager in kilometers.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="sensitivity-tests">
+<h2>Sensitivity tests<a class="headerlink" href="#sensitivity-tests" title="Link to this heading"></a></h2>
+<p>Sensitivity tests are used to determine the sensitivity of contrail detection
+to variations in imager or scene parameters.</p>
+<p>The sensitivity test uses <code class="docutils literal notranslate"><span class="pre">detector_generator</span></code> and <code class="docutils literal notranslate"><span class="pre">detectable_generator</span></code>,
+to create instances of detectors and detectables with varying parameters.
+These can be simply copies of the original detector/detectable, or can be
+more complex instances of <code class="docutils literal notranslate"><span class="pre">InstanceGenerator</span></code>.</p>
+<dl class="py class" id="module-simtrails.sensitivity_test">
+<dt class="sig sig-object py" id="simtrails.sensitivity_test.CDASensitivityTest">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtrails.sensitivity_test.</span></span><span class="sig-name descname"><span class="pre">CDASensitivityTest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">detector_generator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#simtrails.sensitivity_test.InstanceGenerator" title="simtrails.sensitivity_test.InstanceGenerator"><span class="pre">InstanceGenerator</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#simtrails.contrail_detector.ContrailDetector" title="simtrails.contrail_detector.ContrailDetector"><span class="pre">ContrailDetector</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="#simtrails.contrail_detector.ContrailDetector" title="simtrails.contrail_detector.ContrailDetector"><span class="pre">ContrailDetector</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">detectable_generator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#simtrails.sensitivity_test.InstanceGenerator" title="simtrails.sensitivity_test.InstanceGenerator"><span class="pre">InstanceGenerator</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="detectables.html#simtrails.detectable.Detectable" title="simtrails.detectable.Detectable"><span class="pre">Detectable</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="detectables.html#simtrails.detectable.Detectable" title="simtrails.detectable.Detectable"><span class="pre">Detectable</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">cda_properties</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtrails/sensitivity_test.html#CDASensitivityTest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtrails.sensitivity_test.CDASensitivityTest" title="Link to this definition"></a></dt>
+<dd><p>Class representing a sensitivity test for contrail detection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>detector_generator</strong> (<a class="reference internal" href="#simtrails.sensitivity_test.InstanceGenerator" title="simtrails.sensitivity_test.InstanceGenerator"><em>InstanceGenerator</em></a><em> | </em><em>Callable</em><em>[</em><em>...</em><em>, </em><a class="reference internal" href="#simtrails.contrail_detector.ContrailDetector" title="simtrails.contrail_detector.ContrailDetector"><em>ContrailDetector</em></a><em>] </em><em>| </em><a class="reference internal" href="#simtrails.contrail_detector.ContrailDetector" title="simtrails.contrail_detector.ContrailDetector"><em>ContrailDetector</em></a>) – Generator or callable that produces instances of ContrailDetector.</p></li>
+<li><p><strong>detectable_generator</strong> (<a class="reference internal" href="#simtrails.sensitivity_test.InstanceGenerator" title="simtrails.sensitivity_test.InstanceGenerator"><em>InstanceGenerator</em></a><em> | </em><em>Callable</em><em>[</em><em>...</em><em>, </em><a class="reference internal" href="detectables.html#simtrails.detectable.Detectable" title="simtrails.detectable.Detectable"><em>Detectable</em></a><em>] </em><em>| </em><a class="reference internal" href="detectables.html#simtrails.detectable.Detectable" title="simtrails.detectable.Detectable"><em>Detectable</em></a>) – Generator or callable that produces instances of Detectable.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="simtrails.sensitivity_test.CDASensitivityTest.repeats">
+<span class="sig-name descname"><span class="pre">repeats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n:</span> <span class="pre">int,</span> <span class="pre">values:</span> <span class="pre">dict[str,</span> <span class="pre">~typing.Iterable],</span> <span class="pre">agg=&lt;function</span> <span class="pre">sum&gt;,</span> <span class="pre">n_proc=4,</span> <span class="pre">record_optical_depth=False,</span> <span class="pre">**kw_attrs</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="sensitivity_result.html#simtrails.sensitivity_result.SensitivityResult" title="simtrails.sensitivity_result.SensitivityResult"><span class="pre">SensitivityResult</span></a></span></span><a class="reference internal" href="_modules/simtrails/sensitivity_test.html#CDASensitivityTest.repeats"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtrails.sensitivity_test.CDASensitivityTest.repeats" title="Link to this definition"></a></dt>
+<dd><p>Run multiple repeats of the sensitivity test.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<em>int</em>) – Number of repeats.</p></li>
+<li><p><strong>values</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>]</em>) – Dictionary of parameter values to vary.</p></li>
+<li><p><strong>agg</strong> (<em>callable</em><em>, </em><em>optional</em>) – Aggregation function to apply to the results. Defaults to np.sum.</p></li>
+<li><p><strong>n_proc</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of processes to use for parallel execution. Defaults to 4.</p></li>
+<li><p><strong>record_optical_depth</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to record optical depth. Defaults to False.</p></li>
+<li><p><strong>**kw_attrs</strong> – Additional keyword arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Result of the sensitivity test.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="sensitivity_result.html#simtrails.sensitivity_result.SensitivityResult" title="simtrails.sensitivity_result.SensitivityResult">SensitivityResult</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="simtrails.sensitivity_test.InstanceGenerator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtrails.sensitivity_test.</span></span><span class="sig-name descname"><span class="pre">InstanceGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator_class</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtrails/sensitivity_test.html#InstanceGenerator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtrails.sensitivity_test.InstanceGenerator" title="Link to this definition"></a></dt>
+<dd><p>A class that generates instances based on a given generator class and parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>generator_class</strong> (<em>callable</em>) – The generator class or function used to generate instances.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments to be passed to the generator class.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the generator_class is not callable but kwargs were passed.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The generated instance.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="simtrails.sensitivity_test.InstanceGenerator.get_variations">
+<span class="sig-name descname"><span class="pre">get_variations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtrails/sensitivity_test.html#InstanceGenerator.get_variations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtrails.sensitivity_test.InstanceGenerator.get_variations" title="Link to this definition"></a></dt>
+<dd><p>Generate variations of instances based on the given parameter values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>values</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>]</em>) – A dictionary of parameter names and their corresponding values.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of dictionaries containing the variations of parameter values.
+variations (list): A list of generated instances with different parameter values.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>variations_kwargs (list[dict])</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="imagers.html" class="btn btn-neutral float-left" title="Imagers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="sensitivity_result.html" class="btn btn-neutral float-right" title="Sensitivity test results" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Oliver Driver.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

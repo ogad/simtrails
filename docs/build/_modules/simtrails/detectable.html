@@ -1,0 +1,577 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>simtrails.detectable &mdash; Simtrails  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Simtrails
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../usage/installation.html">Installation and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../detectables.html">Detectables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../imagers.html">Imagers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../detectors.html">Detectors and Sensitivity Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sensitivity_result.html">Sensitivity test results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../radiative_transfer.html">Radiative Transfer and lookup tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../detection_algorithms.html">Contrail Detection Algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mannstein.html">Mannstein line-filtering algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cocip.html">CoCiP Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../misc.html">Miscellaneous</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Simtrails</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">simtrails.detectable</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for simtrails.detectable</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span>
+
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">.imager</span> <span class="kn">import</span> <span class="n">Imager</span>
+
+
+<div class="viewcode-block" id="Detectable">
+<a class="viewcode-back" href="../../detectables.html#simtrails.detectable.Detectable">[docs]</a>
+<span class="k">class</span> <span class="nc">Detectable</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract base class for detectable objects.</span>
+
+<span class="sd">    This class defines the common interface and behavior for detectable objects.</span>
+<span class="sd">    It carries the infrastructure to convert use the grid values to look up the</span>
+<span class="sd">    radiative transfer outcome.</span>
+<span class="sd">    </span>
+<span class="sd">    Subclasses must implement the abstract methods and properties defined here.</span>
+
+<span class="sd">    Required child class attributes:</span>
+<span class="sd">        - grid (np.ndarray): The grid of values for the detectable object.</span>
+<span class="sd">        - grid_resolution (float): The resolution of the grid in kilometers.</span>
+<span class="sd">        - hour (int): The hour of the contrail generation in XX:00 format.</span>
+<span class="sd">        - atmosphere_file (str): The file name of the atmosphere data.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">generate_lookup</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialise the lookup table so real-time simulation can be skipped.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lookup_decimals</span> <span class="o">=</span> <span class="mi">4</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lookup</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">generate_lookup</span> <span class="k">else</span> <span class="kc">False</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">lookup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The lookup table of radiative transfer properties.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lookup</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lookup</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lookup</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lookup</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fetch_lookup</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lookup_decimals</span><span class="p">)</span>  <span class="c1"># to move to iwps</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lookup</span>
+
+<div class="viewcode-block" id="Detectable.clear_memory">
+<a class="viewcode-back" href="../../detectables.html#simtrails.detectable.Detectable.clear_memory">[docs]</a>
+    <span class="k">def</span> <span class="nf">clear_memory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Clear the lookup table from memory.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lookup</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lookup</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">False</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lookup</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_grid</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="Detectable.rt_kwargs">
+<a class="viewcode-back" href="../../detectables.html#simtrails.detectable.Detectable.rt_kwargs">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">rt_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid_value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the keyword arguments for the real-time simulation based on the given grid value.&quot;&quot;&quot;</span>
+        <span class="o">...</span></div>
+
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_iwp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid_value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate the ice water content (IWP) based on the given grid value.&quot;&quot;&quot;</span>
+        <span class="o">...</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_pixel_lookup_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid_value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the partial lookup table key for the given grid value.&quot;&quot;&quot;</span>
+        <span class="o">...</span>
+
+<div class="viewcode-block" id="Detectable.get_rt_output">
+<a class="viewcode-back" href="../../detectables.html#simtrails.detectable.Detectable.get_rt_output">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_rt_output</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">imager</span><span class="p">:</span> <span class="n">Imager</span><span class="p">,</span> <span class="n">i_channel</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the radiative transfer output for the detectable object.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            imager (Imager): The imager object used for radiative transfer calculations.</span>
+<span class="sd">            i_channel (int): The channel number to calculate the output for.</span>
+<span class="sd">            shape (tuple[int, int], optional): The desired shape of the output grid. If not provided,</span>
+<span class="sd">                the shape of the detectable object&#39;s grid will be used.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            np.ndarray: The radiative transfer output as a numpy array.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the provided shape is smaller than the detectable object&#39;s grid shape.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+        <span class="c1"># TODO: the logic allows for 2D grids; if we want more properties than just</span>
+        <span class="c1"># contrail flag, we&#39;ll need to change this. We could try calculating</span>
+        <span class="c1"># each grid point (i.e. only the first two indices) a third dimension.</span>
+
+        <span class="c1"># Get the grid, resizing if necessary; not normally used any more, but</span>
+        <span class="c1"># left in case we want to reactivate</span>
+        <span class="k">if</span> <span class="n">shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">grid_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">shape</span>
+            <span class="k">if</span> <span class="n">grid_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">or</span> <span class="n">grid_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Detectable grid shape </span><span class="si">{</span><span class="n">grid_shape</span><span class="si">}</span><span class="s2"> is larger than prescribed shape </span><span class="si">{</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="n">grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+            <span class="n">grid</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">grid</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">bt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_from_values</span><span class="p">(</span><span class="n">imager</span><span class="p">,</span> <span class="n">i_channel</span><span class="p">,</span> <span class="n">output_grid</span><span class="o">=</span><span class="n">grid</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">bt</span></div>
+
+
+<div class="viewcode-block" id="Detectable.output_from_values">
+<a class="viewcode-back" href="../../detectables.html#simtrails.detectable.Detectable.output_from_values">[docs]</a>
+    <span class="k">def</span> <span class="nf">output_from_values</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">imager</span><span class="p">:</span> <span class="n">Imager</span><span class="p">,</span> <span class="n">i_channel</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">output_grid</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the output values based on the input grid, imager, and channel index.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        grid (np.array): The input grid.</span>
+<span class="sd">        imager (Imager): The imager object.</span>
+<span class="sd">        i_channel (int): The channel number.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        np.array: The calculated output values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">output_grid</span> <span class="k">if</span> <span class="n">output_grid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lookup</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">i_channel</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">bt</span> <span class="o">=</span> <span class="n">grid</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">masked_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_array</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">grid</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="n">bt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">masked_grid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lookup</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">lookup</span><span class="p">[</span><span class="n">i_channel</span> <span class="o">-</span> <span class="mi">12</span><span class="p">])</span>
+                <span class="n">bt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="n">bt</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lookup</span><span class="p">[</span><span class="n">i_channel</span> <span class="o">-</span> <span class="mi">12</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rounded_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lookup_decimals</span><span class="p">)</span>
+            <span class="n">unique_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">rounded_grid</span><span class="p">)</span>
+            <span class="n">vfunc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulate_pixel_radiance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">imager</span><span class="p">,</span> <span class="n">i_channel</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">bt_values</span> <span class="o">=</span> <span class="n">vfunc</span><span class="p">(</span><span class="n">unique_values</span><span class="p">)</span>
+            <span class="n">bt</span> <span class="o">=</span> <span class="n">bt_values</span><span class="p">[</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">unique_values</span> <span class="o">==</span> <span class="n">rounded_grid</span><span class="p">[:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">])[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">rounded_grid</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">bt</span></div>
+
+
+<div class="viewcode-block" id="Detectable.simulate_pixel_output">
+<a class="viewcode-back" href="../../detectables.html#simtrails.detectable.Detectable.simulate_pixel_output">[docs]</a>
+    <span class="k">def</span> <span class="nf">simulate_pixel_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid_value</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">imager</span><span class="p">:</span> <span class="n">Imager</span><span class="p">,</span> <span class="n">i_channel</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Simulates the pixel output for a given grid value, imager, and channel.</span>
+
+<span class="sd">        This is only used for the real-time simulation, and is not invoked if</span>
+<span class="sd">        a lookup table is provided.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            grid_value (float): The value of the grid.</span>
+<span class="sd">            imager (Imager): The imager object.</span>
+<span class="sd">            i_channel (int): The channel number.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            data (xr.Dataset): The simulated pixel output.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If an error occurs during the simulation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">.radiative_transfer</span> <span class="kn">import</span> <span class="n">get_output</span>
+        <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+        <span class="n">rt_kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rt_kwargs</span><span class="p">(</span><span class="n">grid_value</span><span class="p">)</span> <span class="o">|</span> <span class="n">imager</span><span class="o">.</span><span class="n">get_rt_options</span><span class="p">(</span><span class="n">i_channel</span><span class="p">)</span>
+        <span class="n">rt_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">rt_kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">get_output</span><span class="p">(</span><span class="o">**</span><span class="n">rt_kwargs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">rt_kwargs</span><span class="p">)</span>
+            <span class="k">raise</span>
+
+        <span class="k">if</span> <span class="s2">&quot;ic_file&quot;</span> <span class="ow">in</span> <span class="n">rt_kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">Path</span><span class="p">(</span><span class="n">rt_kwargs</span><span class="p">[</span><span class="s2">&quot;ic_file&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="Detectable.simulate_pixel_radiance">
+<a class="viewcode-back" href="../../detectables.html#simtrails.detectable.Detectable.simulate_pixel_radiance">[docs]</a>
+    <span class="k">def</span> <span class="nf">simulate_pixel_radiance</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">grid_value</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">imager</span><span class="p">:</span> <span class="n">Imager</span><span class="p">,</span> <span class="n">i_channel</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Simulates the pixel radiance for a given grid value, imager, and channel.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        grid_value (float): The value of the grid.</span>
+<span class="sd">        imager (Imager): The imager object.</span>
+<span class="sd">        i_channel (int): The channel number.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        float: The simulated pixel radiance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">i_channel</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">grid_value</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulate_pixel_output</span><span class="p">(</span><span class="n">grid_value</span><span class="p">,</span> <span class="n">imager</span><span class="p">,</span> <span class="n">i_channel</span><span class="p">)</span>
+        <span class="n">radiance_bt</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">uu</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">umu</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">radiance_bt</span></div>
+
+
+<div class="viewcode-block" id="Detectable.pixel_optical_depth">
+<a class="viewcode-back" href="../../detectables.html#simtrails.detectable.Detectable.pixel_optical_depth">[docs]</a>
+    <span class="k">def</span> <span class="nf">pixel_optical_depth</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">grid_value</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">imager</span><span class="p">:</span> <span class="n">Imager</span><span class="p">,</span> <span class="n">i_channel</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the pixel optical depth for a given grid value, imager, and channel.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        grid_value (float): The value of the grid.</span>
+<span class="sd">        imager (Imager): The imager object.</span>
+<span class="sd">        i_channel (int): The channel number.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        float: The pixel optical depth.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">        NotImplementedError: This method is not currently implemented.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulate_pixel_output</span><span class="p">(</span><span class="n">grid_value</span><span class="p">,</span> <span class="n">imager</span><span class="p">,</span> <span class="n">i_channel</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s2">&quot;TODO: implement optical depth calculation without using verbose output&quot;</span>
+        <span class="p">)</span></div>
+
+        <span class="c1"># if len(verb[&quot;optprop&quot;].wvl) &gt; 1:</span>
+        <span class="c1">#     raise ValueError(</span>
+        <span class="c1">#         &quot;RT output has more than one wavelength; use a detector band.&quot;</span>
+        <span class="c1">#     )</span>
+        <span class="c1"># optical_depth = -1 * np.trapz(</span>
+        <span class="c1">#     verb[&quot;optprop&quot;].ic_abs + verb[&quot;optprop&quot;].ic_sca, verb[&quot;optprop&quot;].z</span>
+        <span class="c1"># )</span>
+        <span class="c1"># return optical_depth</span>
+
+<div class="viewcode-block" id="Detectable.max_optical_depth">
+<a class="viewcode-back" href="../../detectables.html#simtrails.detectable.Detectable.max_optical_depth">[docs]</a>
+    <span class="k">def</span> <span class="nf">max_optical_depth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">imager</span><span class="p">:</span> <span class="n">Imager</span><span class="p">,</span> <span class="n">i_channel</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the maximum optical depth for a given imager and channel.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        imager (Imager): The imager object.</span>
+<span class="sd">        i_channel (int): The channel number.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        float: The maximum optical depth.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">        NotImplementedError: This method is not currently implemented.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_optical_depth</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="n">imager</span><span class="p">,</span> <span class="n">i_channel</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Detectable.fetch_lookup">
+<a class="viewcode-back" href="../../detectables.html#simtrails.detectable.Detectable.fetch_lookup">[docs]</a>
+    <span class="k">def</span> <span class="nf">fetch_lookup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_decimals</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fetch the lookup values for the given number of decimals.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        n_decimals (int): The number of decimals.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        Optional[List[np.ndarray]]: The lookup values or None if an error occurs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">simtrails.lookup</span> <span class="kn">import</span> <span class="n">lookup_interp</span>
+
+        <span class="n">n_points</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="n">n_decimals</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="n">grid_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_points</span><span class="p">),</span> <span class="n">n_decimals</span><span class="p">)</span>
+        <span class="n">iwps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iwp</span><span class="p">(</span><span class="n">grid_values</span><span class="p">)</span>  <span class="c1"># to move to iwps</span>
+        <span class="n">lookups</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">lookups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">grid_values</span><span class="p">)</span>
+        <span class="n">lookup_key</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;albedo&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;atmosphere_file&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">atmosphere_file</span><span class="p">,</span>
+            <span class="s2">&quot;hour&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hour</span><span class="p">,</span>
+        <span class="p">}</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixel_lookup_key</span><span class="p">(</span><span class="n">grid_values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="c1"># lookup_key.pop(&quot;iwc&quot;)</span>
+        <span class="n">lookup_key</span><span class="p">[</span><span class="s2">&quot;iwp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">iwps</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">channel</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([</span><span class="mi">13</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">15</span><span class="p">]):</span>
+            <span class="n">lookup_key</span><span class="p">[</span><span class="s2">&quot;reptran_channel&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;goes-r_abi_ch</span><span class="si">{</span><span class="n">channel</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">lookups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lookup_interp</span><span class="p">(</span><span class="o">**</span><span class="n">lookup_key</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">lookups</span></div>
+</div>
+
+
+
+<span class="k">class</span> <span class="nc">EmptyScene</span><span class="p">(</span><span class="n">Detectable</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+        <span class="n">resolution</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.25</span><span class="p">,</span>
+        <span class="n">albedo</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">atmosphere_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">hour</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the EmptyScene object.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        size (tuple[int, int]): The size of the scene.</span>
+<span class="sd">        resolution (float): The grid resolution. Default is 0.25.</span>
+<span class="sd">        albedo (float): The albedo value. Default is 0.</span>
+<span class="sd">        atmosphere_file (str): The atmosphere file. Default is None.</span>
+<span class="sd">        hour (int): The hour of the scene. Default is 12.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grid_resolution</span> <span class="o">=</span> <span class="n">resolution</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">albedo</span> <span class="o">=</span> <span class="n">albedo</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">atmosphere_file</span> <span class="o">=</span> <span class="s2">&quot;us&quot;</span> <span class="k">if</span> <span class="n">atmosphere_file</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">atmosphere_file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hour</span> <span class="o">=</span> <span class="n">hour</span>
+
+    <span class="k">def</span> <span class="nf">rt_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the radiative transfer keyword arguments.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        _ : Unused parameter.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        dict: The radiative transfer keyword arguments.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;albedo&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_albedo</span><span class="p">}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">lookup_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the lookup ID.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        str: The lookup ID.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;EmptyScene(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">resolution</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">albedo</span><span class="si">}</span><span class="s2">)&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_pixel_lookup_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the pixel lookup key.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        _ : Unused parameter.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        dict: The pixel lookup key.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;iwp&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;altitude&quot;</span><span class="p">:</span> <span class="mf">11.3</span><span class="p">,</span>
+            <span class="s2">&quot;depth&quot;</span><span class="p">:</span> <span class="mf">0.7</span><span class="p">,</span>
+            <span class="s2">&quot;eff_radius&quot;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+        <span class="p">}</span>
+
+
+<span class="k">class</span> <span class="nc">TestPixel</span><span class="p">(</span><span class="n">Detectable</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">altitude</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">11.0</span><span class="p">,</span>  <span class="c1"># km</span>
+        <span class="n">depth</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>  <span class="c1"># km</span>
+        <span class="n">iwp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># g/m^2</span>
+        <span class="n">iwc</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># g/m^3; default is 0.01 g/m^3</span>
+        <span class="n">n_ice</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># L-1; uses spherical</span>
+        <span class="n">eff_radius</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># um default is 20 um</span>
+        <span class="n">atmosphere_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;us&quot;</span><span class="p">,</span>
+        <span class="n">hour</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span>  <span class="c1"># XX:00</span>
+        <span class="n">generate_lookup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the TestPixel object.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        base (float): The base value in kilometers. Default is 11.0.</span>
+<span class="sd">        depth (float): The depth value in kilometers. Default is 0.5.</span>
+<span class="sd">        iwp (float): The ice water path value in g/m^2. Default is None.</span>
+<span class="sd">        iwc (float): The ice water content value in g/m^3. Default is None.</span>
+<span class="sd">        n_ice (float): The ice particle concentration value in L-1. Default is None.</span>
+<span class="sd">        eff_radius (float): The effective radius value in um. Default is None.</span>
+<span class="sd">        atmosphere_file (str): The atmosphere file. Default is &quot;us&quot;.</span>
+<span class="sd">        hour (int): The hour of the scene. Default is 12.</span>
+<span class="sd">        generate_lookup (bool): Whether to generate the lookup table. Default is False.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">simtrails.misc.microphysics</span> <span class="kn">import</span> <span class="n">ic_lrt_properties</span>
+
+        <span class="n">iwp</span><span class="p">,</span> <span class="n">eff_radius</span> <span class="o">=</span> <span class="n">ic_lrt_properties</span><span class="p">(</span><span class="n">iwc</span><span class="p">,</span> <span class="n">iwp</span><span class="p">,</span> <span class="n">eff_radius</span><span class="p">,</span> <span class="n">n_ice</span><span class="p">,</span> <span class="n">depth</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">iwp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">iwp</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>  <span class="c1"># g/m^3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">depth</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">depth</span>  <span class="c1"># km</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">altitude</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">altitude</span>  <span class="c1"># km</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eff_radius</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">eff_radius</span>  <span class="c1"># um</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">]])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grid_resolution</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">atmosphere_file</span> <span class="o">=</span> <span class="s2">&quot;us&quot;</span> <span class="k">if</span> <span class="n">atmosphere_file</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">atmosphere_file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hour</span> <span class="o">=</span> <span class="n">hour</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__post_init__</span><span class="p">(</span><span class="n">generate_lookup</span><span class="o">=</span><span class="n">generate_lookup</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">rt_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the radiative transfer keyword arguments.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        _ : Unused parameter.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        dict: The radiative transfer keyword arguments.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">simtrails.radiative_transfer</span> <span class="kn">import</span> <span class="n">get_ic_file</span><span class="p">,</span> <span class="n">scene_rt_kwargs</span>
+
+        <span class="n">iwc_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">iwp</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">depth</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">)</span>
+        <span class="n">ic_file</span> <span class="o">=</span> <span class="n">get_ic_file</span><span class="p">(</span><span class="n">iwc_value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">altitude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eff_radius</span><span class="p">)</span>
+        <span class="n">rt_kwargs</span> <span class="o">=</span> <span class="n">scene_rt_kwargs</span><span class="p">(</span>
+            <span class="n">ic_file</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eff_radius</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">atmosphere_file</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hour</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">rt_kwargs</span>
+
+    <span class="k">def</span> <span class="nf">_iwp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the ice water content.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        _ : Unused parameter.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        float: The ice water content.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">iwp</span>
+
+    <span class="k">def</span> <span class="nf">_pixel_lookup_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the pixel lookup key.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        _ : Unused parameter.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        dict: The pixel lookup key.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;iwp&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">iwp</span><span class="p">,</span>
+            <span class="s2">&quot;altitude&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">altitude</span><span class="p">,</span>
+            <span class="s2">&quot;depth&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth</span><span class="p">,</span>
+            <span class="s2">&quot;eff_radius&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">eff_radius</span><span class="p">,</span>
+        <span class="p">}</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Oliver Driver.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

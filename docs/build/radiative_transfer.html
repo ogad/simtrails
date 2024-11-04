@@ -1,0 +1,250 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Radiative Transfer and lookup tables &mdash; Simtrails  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Contrail Detection Algorithms" href="detection_algorithms.html" />
+    <link rel="prev" title="Sensitivity test results" href="sensitivity_result.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Simtrails
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="usage/installation.html">Installation and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="detectables.html">Detectables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="imagers.html">Imagers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="detectors.html">Detectors and Sensitivity Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sensitivity_result.html">Sensitivity test results</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Radiative Transfer and lookup tables</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-simtrails.radiative_transfer">Radiative transfer infrastructure</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#simtrails.radiative_transfer.brightness_temperature"><code class="docutils literal notranslate"><span class="pre">brightness_temperature()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simtrails.radiative_transfer.get_ic_file"><code class="docutils literal notranslate"><span class="pre">get_ic_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simtrails.radiative_transfer.get_output"><code class="docutils literal notranslate"><span class="pre">get_output()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simtrails.radiative_transfer.scene_rt_kwargs"><code class="docutils literal notranslate"><span class="pre">scene_rt_kwargs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-simtrails.lookup">Lookup tables</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#simtrails.lookup.lookup_interp"><code class="docutils literal notranslate"><span class="pre">lookup_interp()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="detection_algorithms.html">Contrail Detection Algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mannstein.html">Mannstein line-filtering algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cocip.html">CoCiP Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="misc.html">Miscellaneous</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Simtrails</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Radiative Transfer and lookup tables</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/radiative_transfer.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="radiative-transfer-and-lookup-tables">
+<h1>Radiative Transfer and lookup tables<a class="headerlink" href="#radiative-transfer-and-lookup-tables" title="Link to this heading"></a></h1>
+<section id="module-simtrails.radiative_transfer">
+<span id="radiative-transfer-infrastructure"></span><h2>Radiative transfer infrastructure<a class="headerlink" href="#module-simtrails.radiative_transfer" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="simtrails.radiative_transfer.brightness_temperature">
+<span class="sig-prename descclassname"><span class="pre">simtrails.radiative_transfer.</span></span><span class="sig-name descname"><span class="pre">brightness_temperature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wvl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wvn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radiance_wvl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radiance_wvn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radiance_nu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtrails/radiative_transfer.html#brightness_temperature"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtrails.radiative_transfer.brightness_temperature" title="Link to this definition"></a></dt>
+<dd><p>Compute the brightness temperature.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wvl</strong> – Wavelength (microns)</p></li>
+<li><p><strong>wvn</strong> – Wavenumber (cm^-1)</p></li>
+<li><p><strong>nu</strong> – Frequency (Hz)</p></li>
+<li><p><strong>radiance_wvl</strong> – Radiance with respect to wavelength (W/m^2/sr/micron)</p></li>
+<li><p><strong>radiance_wvn</strong> – Radiance with respect to wavenumber (W/m^2/sr/cm^-1)</p></li>
+<li><p><strong>radiance_nu</strong> – Radiance with respect to frequency (W/m^2/sr/Hz)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Brightness temperature (K)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>brightness_temp</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtrails.radiative_transfer.get_ic_file">
+<span class="sig-prename descclassname"><span class="pre">simtrails.radiative_transfer.</span></span><span class="sig-name descname"><span class="pre">get_ic_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iwc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">altitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eff_radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">background</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Clear'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtrails/radiative_transfer.html#get_ic_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtrails.radiative_transfer.get_ic_file" title="Link to this definition"></a></dt>
+<dd><p>Generate an ice cloud file and return its path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>iwc</strong> – Ice water content (g/m^3)</p></li>
+<li><p><strong>altitude</strong> – Base altitude of the cloud (km)</p></li>
+<li><p><strong>depth</strong> – Thickness of the cloud (km)</p></li>
+<li><p><strong>eff_radius</strong> – Effective radius of the cloud particles (microns)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Path to the generated ice cloud file</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ic_file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtrails.radiative_transfer.get_output">
+<span class="sig-prename descclassname"><span class="pre">simtrails.radiative_transfer.</span></span><span class="sig-name descname"><span class="pre">get_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cloud</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">brightness</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtrails/radiative_transfer.html#get_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtrails.radiative_transfer.get_output" title="Link to this definition"></a></dt>
+<dd><p>Run the radiative transfer model and return the output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cloud</strong> – Cloud object representing the cloud properties, this is not normally used (optional)</p></li>
+<li><p><strong>brightness</strong> – Flag indicating whether to compute brightness quantities (default: True)</p></li>
+<li><p><strong>kwargs</strong> – Additional keyword arguments to customize the radiative transfer model</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Output of the radiative transfer model</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>rt_output</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtrails.radiative_transfer.scene_rt_kwargs">
+<span class="sig-prename descclassname"><span class="pre">simtrails.radiative_transfer.</span></span><span class="sig-name descname"><span class="pre">scene_rt_kwargs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ic_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eff_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atmosphere_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'us'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hour</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtrails/radiative_transfer.html#scene_rt_kwargs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtrails.radiative_transfer.scene_rt_kwargs" title="Link to this definition"></a></dt>
+<dd><p>Generate keyword arguments for running the radiative transfer model for a scene.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ic_file</strong> – Path to the ice cloud file (optional)</p></li>
+<li><p><strong>eff_radius</strong> – Effective radius of the cloud particles (microns)</p></li>
+<li><p><strong>atmosphere_file</strong> – Name of the atmosphere file (default: “us”)</p></li>
+<li><p><strong>hour</strong> – Hour of the day (default: 12)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary of keyword arguments for the radiative transfer model</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>rt_kwargs</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-simtrails.lookup">
+<span id="lookup-tables"></span><h2>Lookup tables<a class="headerlink" href="#module-simtrails.lookup" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="simtrails.lookup.lookup_interp">
+<span class="sig-prename descclassname"><span class="pre">simtrails.lookup.</span></span><span class="sig-name descname"><span class="pre">lookup_interp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lookup_table</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bt'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtrails/lookup.html#lookup_interp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtrails.lookup.lookup_interp" title="Link to this definition"></a></dt>
+<dd><p>Interpolates values from a lookup table based on provided coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lookup_table</strong> (<em>xarray.Dataset</em>) – The lookup table containing the data.</p></li>
+<li><p><strong>var</strong> (<em>str</em>) – The variable to interpolate from the lookup table.</p></li>
+<li><p><strong>**kwargs</strong> – Keyword arguments representing the coordinates for interpolation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The interpolated values.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xarray.DataArray</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If any required coordinates are missing or if any lookup values are invalid or out of range.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-simtrails.generate_lookup"></span></section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="sensitivity_result.html" class="btn btn-neutral float-left" title="Sensitivity test results" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="detection_algorithms.html" class="btn btn-neutral float-right" title="Contrail Detection Algorithms" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Oliver Driver.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

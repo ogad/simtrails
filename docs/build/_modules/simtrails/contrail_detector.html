@@ -1,0 +1,187 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>simtrails.contrail_detector &mdash; Simtrails  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Simtrails
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../usage/installation.html">Installation and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../detectables.html">Detectables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../imagers.html">Imagers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../detectors.html">Detectors and Sensitivity Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sensitivity_result.html">Sensitivity test results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../radiative_transfer.html">Radiative Transfer and lookup tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../detection_algorithms.html">Contrail Detection Algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mannstein.html">Mannstein line-filtering algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cocip.html">CoCiP Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../misc.html">Miscellaneous</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Simtrails</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">simtrails.contrail_detector</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for simtrails.contrail_detector</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">simtrails.detectable</span> <span class="kn">import</span> <span class="n">Detectable</span>
+<span class="kn">from</span> <span class="nn">simtrails.detection_algorithms</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ContrailDetectionAlgorithm</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">simtrails.imager</span> <span class="kn">import</span> <span class="n">Imager</span>
+
+
+<div class="viewcode-block" id="ContrailDetector">
+<a class="viewcode-back" href="../../detectors.html#simtrails.contrail_detector.ContrailDetector">[docs]</a>
+<span class="k">class</span> <span class="nc">ContrailDetector</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class representing a contrail detector (imager-algorithm combination).</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        imager (Imager): The imager used for capturing scenes.</span>
+<span class="sd">        algorithm (ContrailDetectionAlgorithm): The algorithm used for contrail detection.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">imager</span><span class="p">:</span> <span class="n">Imager</span><span class="p">,</span> <span class="n">algorithm</span><span class="p">:</span> <span class="n">ContrailDetectionAlgorithm</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imager</span> <span class="o">=</span> <span class="n">imager</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">=</span> <span class="n">algorithm</span>
+
+<div class="viewcode-block" id="ContrailDetector.contrail_mask">
+<a class="viewcode-back" href="../../detectors.html#simtrails.contrail_detector.ContrailDetector.contrail_mask">[docs]</a>
+    <span class="k">def</span> <span class="nf">contrail_mask</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">scene</span><span class="p">:</span> <span class="n">Detectable</span><span class="p">,</span> <span class="n">pbar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">plot_kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates a contrail mask for a given detectable scene.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            scene (Detectable): The scene to generate the contrail mask for.</span>
+<span class="sd">            pbar (tqdm.tqdm, optional): Progress bar to display the progress of the contrail detection algorithm.</span>
+<span class="sd">            ax (matplotlib.axes.Axes, optional): Axes to plot the scene and contrail mask.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            np.ndarray: The contrail mask.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">simtrails.validation</span> <span class="kn">import</span> <span class="n">validated_contrail_mask</span>
+
+        <span class="k">if</span> <span class="n">pbar</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+
+            <span class="n">pbar</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">n_steps</span><span class="p">)</span>
+
+        <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="p">(</span><span class="n">scene</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">imager</span><span class="p">,</span> <span class="n">pbar</span><span class="o">=</span><span class="n">pbar</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="o">**</span><span class="n">plot_kwargs</span><span class="p">)</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">validated_contrail_mask</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="mi">90</span> <span class="o">-</span> <span class="n">scene</span><span class="o">.</span><span class="n">angle</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">mask</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="GOESMannsteinDetector">
+<a class="viewcode-back" href="../../detectors.html#simtrails.contrail_detector.GOESMannsteinDetector">[docs]</a>
+<span class="k">class</span> <span class="nc">GOESMannsteinDetector</span><span class="p">(</span><span class="n">ContrailDetector</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class representing a contrail detector using GOES imager and Mannstein algorithm.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        imager (GOESImager): The GOES imager object used for contrail detection.</span>
+<span class="sd">        algorithm (MannsteinCDA): The Mannstein algorithm object used for contrail detection.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        resolution (float): The resolution of the imager in kilometers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resolution</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="o">**</span><span class="n">mannstein_kwargs</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">simtrails.detection_algorithms</span> <span class="kn">import</span> <span class="n">MannsteinCDA</span>
+        <span class="kn">from</span> <span class="nn">simtrails.imager</span> <span class="kn">import</span> <span class="n">GOESImager</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">imager</span> <span class="o">=</span> <span class="n">GOESImager</span><span class="p">(</span><span class="n">resolution</span><span class="o">=</span><span class="n">resolution</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">=</span> <span class="n">MannsteinCDA</span><span class="p">(</span><span class="o">**</span><span class="n">mannstein_kwargs</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Oliver Driver.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

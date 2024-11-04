@@ -1,0 +1,610 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>simtrails.mannstein &mdash; Simtrails  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Simtrails
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../usage/installation.html">Installation and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../detectables.html">Detectables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../imagers.html">Imagers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../detectors.html">Detectors and Sensitivity Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sensitivity_result.html">Sensitivity test results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../radiative_transfer.html">Radiative Transfer and lookup tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../detection_algorithms.html">Contrail Detection Algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mannstein.html">Mannstein line-filtering algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cocip.html">CoCiP Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../misc.html">Miscellaneous</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Simtrails</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">simtrails.mannstein</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for simtrails.mannstein</h1><div class="highlight"><pre>
+<span></span><span class="c1"># coding=utf-8</span>
+<span class="c1">#</span>
+<span class="c1"># Based on the original implementation by Authors at Google.</span>
+<span class="c1"># Minor modifications by Oliver Driver as described in Driver et al (2024)., September 2023</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright 2022 The Landsat Contrails Dataset Authors.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">pi</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="n">TWELVE_MICRONS</span> <span class="o">=</span> <span class="s2">&quot;temperature_12um&quot;</span>
+<span class="n">TDIFF</span> <span class="o">=</span> <span class="s2">&quot;brightness_temperature_difference&quot;</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;stddev_epsilon&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span>
+    <span class="s2">&quot;normalized_clip_magnitude&quot;</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span>
+    <span class="s2">&quot;normalized_sum_threshold&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>  <span class="c1"># Tuned</span>
+    <span class="s2">&quot;temperature_difference_threshold&quot;</span><span class="p">:</span> <span class="mf">1.33</span><span class="p">,</span>  <span class="c1"># Tuned</span>
+    <span class="s2">&quot;max_contrail_num_pixels&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
+    <span class="s2">&quot;min_contrail_num_pixels&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>  <span class="c1"># Tuned</span>
+    <span class="s2">&quot;min_contrail_pixel_length&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>  <span class="c1"># Tuned</span>
+    <span class="s2">&quot;min_linear_regression_r_score&quot;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
+    <span class="s2">&quot;num_line_kernels&quot;</span><span class="p">:</span> <span class="mi">16</span><span class="p">,</span>  <span class="c1"># Tuned</span>
+    <span class="s2">&quot;line_kernel_size_pixels&quot;</span><span class="p">:</span> <span class="mi">19</span><span class="p">,</span>
+    <span class="s2">&quot;line_kernel_pixels_per_sigma1&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>  <span class="c1"># Tuned</span>
+    <span class="s2">&quot;line_kernel_pixels_per_sigma_delta&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>  <span class="c1"># Tuned</span>
+    <span class="s2">&quot;lowpass_kernel_pixels_per_sigma&quot;</span><span class="p">:</span> <span class="mf">3.88</span><span class="p">,</span>  <span class="c1"># Tuned</span>
+    <span class="s2">&quot;lowpass_kernel_size_pixels&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="s2">&quot;prewitt_operator_size_pixels&quot;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>  <span class="c1"># Tuned</span>
+    <span class="s2">&quot;prewitt_operator_smoothing_pixels&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="s2">&quot;regional_gradient_max_scale&quot;</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span>
+    <span class="s2">&quot;regional_gradient_max_offset&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>  <span class="c1"># Tuned</span>
+<span class="p">}</span>
+
+<span class="n">ogad_config</span> <span class="o">=</span> <span class="n">config</span> <span class="o">|</span> <span class="p">{</span>
+    <span class="s2">&quot;temperature_difference_threshold&quot;</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">,</span>
+    <span class="s2">&quot;normalized_sum_threshold&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s2">&quot;min_contrail_num_pixels&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+    <span class="s2">&quot;min_contrail_pixel_length&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="k">del</span> <span class="n">ogad_config</span><span class="p">[</span><span class="s2">&quot;regional_gradient_max_scale&quot;</span><span class="p">]</span>
+<span class="k">del</span> <span class="n">ogad_config</span><span class="p">[</span><span class="s2">&quot;regional_gradient_max_offset&quot;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="lowpass">
+<a class="viewcode-back" href="../../mannstein.html#simtrails.mannstein.lowpass">[docs]</a>
+<span class="k">def</span> <span class="nf">lowpass</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Applies a gaussian lowpass kernel.&quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">signal</span>
+
+    <span class="c1"># The Mannstein et al paper doesn&#39;t give enough information about this kernel</span>
+    <span class="c1"># to reproduce it exactly, it just says &quot;Gaussian 5x5 pixel lowpass kernel&quot;,</span>
+    <span class="c1"># so the gaussian parameters come from config so they can get tuned</span>
+    <span class="c1"># by blackbox optimization.</span>
+    <span class="n">kernel_size_pixels</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;lowpass_kernel_size_pixels&quot;</span><span class="p">]</span>
+    <span class="n">pixels_per_sigma</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;lowpass_kernel_pixels_per_sigma&quot;</span><span class="p">]</span>
+    <span class="n">units_per_sigma</span> <span class="o">=</span> <span class="n">pixels_per_sigma</span> <span class="o">/</span> <span class="n">kernel_size_pixels</span>
+    <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">kernel_size_pixels</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">kernel_size_pixels</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">distance_from_center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">n1</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">n2</span><span class="p">))</span>
+    <span class="n">gaussian</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="mi">1</span>
+        <span class="o">/</span> <span class="p">(</span><span class="n">units_per_sigma</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span>
+        <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">distance_from_center</span> <span class="o">/</span> <span class="n">units_per_sigma</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="n">gaussian_kernel</span> <span class="o">=</span> <span class="n">gaussian</span> <span class="o">/</span> <span class="n">gaussian</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">signal</span><span class="o">.</span><span class="n">convolve2d</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">gaussian_kernel</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="synthesize_line_kernel">
+<a class="viewcode-back" href="../../mannstein.html#simtrails.mannstein.synthesize_line_kernel">[docs]</a>
+<span class="k">def</span> <span class="nf">synthesize_line_kernel</span><span class="p">(</span><span class="n">degrees</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a kernel for line detection at the specified angle in `degrees`.&quot;&quot;&quot;</span>
+    <span class="n">size</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;line_kernel_size_pixels&quot;</span><span class="p">]</span>
+    <span class="n">radians</span> <span class="o">=</span> <span class="n">degrees</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">180.0</span><span class="p">)</span>
+    <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="p">))</span>
+
+    <span class="c1"># d is the distance of each point from the line with slope `radians`</span>
+    <span class="c1"># which passes through the origin.</span>
+    <span class="c1"># The formula below for `d` is derived as follows:</span>
+    <span class="c1"># If you rotated the line by multiplying it with</span>
+    <span class="c1"># the standard 2D rotation matrix R = [[cos r, -sin r], [sin r, cos r]],</span>
+    <span class="c1"># it would become an entirely vertical line (x=0).</span>
+    <span class="c1"># If you did the same thing to all the points in the kernel field,</span>
+    <span class="c1"># then their x-coordinate becomes the distance from the line. Then:</span>
+    <span class="c1"># np.dot(R, [n1, n2])[0] = n1 * cos(r) - n2 * sin(r)</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="p">(</span><span class="n">n1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">radians</span><span class="p">))</span> <span class="o">-</span> <span class="p">(</span><span class="n">n2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">radians</span><span class="p">))</span>
+
+    <span class="n">pixels_per_sigma1</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;line_kernel_pixels_per_sigma1&quot;</span><span class="p">]</span>
+    <span class="n">pixels_per_sigma2</span> <span class="o">=</span> <span class="n">pixels_per_sigma1</span> <span class="o">+</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;line_kernel_pixels_per_sigma_delta&quot;</span><span class="p">]</span>
+    <span class="n">units_per_sigma1</span> <span class="o">=</span> <span class="n">pixels_per_sigma1</span> <span class="o">/</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;line_kernel_size_pixels&quot;</span><span class="p">]</span>
+    <span class="n">gaussian1</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">units_per_sigma1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)))</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">d</span> <span class="o">/</span> <span class="n">units_per_sigma1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">units_per_sigma2</span> <span class="o">=</span> <span class="n">pixels_per_sigma2</span> <span class="o">/</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;line_kernel_size_pixels&quot;</span><span class="p">]</span>
+    <span class="n">gaussian2</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">units_per_sigma2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)))</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">d</span> <span class="o">/</span> <span class="n">units_per_sigma2</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">difference_of_gaussians</span> <span class="o">=</span> <span class="n">gaussian1</span> <span class="o">-</span> <span class="n">gaussian2</span>
+    <span class="k">return</span> <span class="n">zero_sum_normalize</span><span class="p">(</span><span class="n">difference_of_gaussians</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="zero_sum_normalize">
+<a class="viewcode-back" href="../../mannstein.html#simtrails.mannstein.zero_sum_normalize">[docs]</a>
+<span class="k">def</span> <span class="nf">zero_sum_normalize</span><span class="p">(</span><span class="n">kernel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Normalizes kernels that are intentionally symmetrical around 0.</span>
+
+<span class="sd">    Difference of Gaussians and Prewitt operators (among others) are zero-summing,</span>
+<span class="sd">    so we normalize the positive and negative values separately, as suggested by</span>
+<span class="sd">    http://www.imagemagick.org/Usage/convolve/#zero-summing_normalization.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      kernel: 2D numpy array.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Zero-sum normalized kernel.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pos_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">kernel</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">kernel</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="n">neg_sum</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">kernel</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">kernel</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">kernel</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">kernel</span> <span class="o">/</span> <span class="n">pos_sum</span><span class="p">,</span> <span class="n">kernel</span> <span class="o">/</span> <span class="n">neg_sum</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_regional_gradient_mask">
+<a class="viewcode-back" href="../../mannstein.html#simtrails.mannstein.get_regional_gradient_mask">[docs]</a>
+<span class="k">def</span> <span class="nf">get_regional_gradient_mask</span><span class="p">(</span><span class="n">t_12um</span><span class="p">,</span> <span class="n">t_12um_stddev</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Masks out pixels on the edges of large features.</span>
+
+<span class="sd">    There&#39;s a lot of ways to implement a &quot;large scale gradient&quot;,</span>
+<span class="sd">    and the Mannstein et al paper only specifies the size: 15px.</span>
+<span class="sd">    Here we use a blurred Prewitt operator because it&#39;s the simplest</span>
+<span class="sd">    to implement at varying kernel sizes for later tuning.</span>
+<span class="sd">    https://en.wikipedia.org/wiki/Prewitt_operator.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      t_12um: array of 12 um temperature.</span>
+<span class="sd">      t_12um_stddev: stddev of above array.</span>
+<span class="sd">      config: algorithm configuration parameters (eg thresholds).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      boolean array of whether the pixel is part of a large scale gradient,</span>
+<span class="sd">        and therefore is not a contrail.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">signal</span>
+
+    <span class="n">mean_kernel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;prewitt_operator_size_pixels&quot;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">gradient_kernel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;prewitt_operator_smoothing_pixels&quot;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;prewitt_operator_size_pixels&quot;</span><span class="p">]</span>
+                <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;prewitt_operator_smoothing_pixels&quot;</span><span class="p">],</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;prewitt_operator_smoothing_pixels&quot;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">),</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">prewitt_col</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">mean_kernel</span><span class="p">,</span> <span class="n">gradient_kernel</span><span class="p">)</span>
+    <span class="c1"># Zero-sum normalize it to keep the gradient in units of Kelvin,</span>
+    <span class="c1"># for later applying equation (5).</span>
+    <span class="n">prewitt_col</span> <span class="o">=</span> <span class="n">zero_sum_normalize</span><span class="p">(</span><span class="n">prewitt_col</span><span class="p">)</span>
+    <span class="n">prewitt_row</span> <span class="o">=</span> <span class="n">prewitt_col</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">gradient_row</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">convolve2d</span><span class="p">(</span><span class="n">t_12um</span><span class="p">,</span> <span class="n">prewitt_row</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+    <span class="n">gradient_col</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">convolve2d</span><span class="p">(</span><span class="n">t_12um</span><span class="p">,</span> <span class="n">prewitt_col</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+    <span class="n">t_12um_regional_gradient</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">gradient_row</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">gradient_col</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">t_12um_regional_gradient</span>
+        <span class="o">&lt;</span> <span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;regional_gradient_max_scale&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">t_12um_stddev</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;regional_gradient_max_offset&quot;</span><span class="p">]</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="mannstein_preprocessing">
+<a class="viewcode-back" href="../../mannstein.html#simtrails.mannstein.mannstein_preprocessing">[docs]</a>
+<span class="k">def</span> <span class="nf">mannstein_preprocessing</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns mask identifying contrail pixels.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      features: dict containing 11um and 12um brightness temperatures.</span>
+<span class="sd">      config: algorithm configuration parameters (eg thresholds).</span>
+<span class="sd">      degrees: the angle to detect contrails for.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Array which is 1 where a pixel is on a contrail and 0 elsewhere.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">t_12um</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="n">TWELVE_MICRONS</span><span class="p">]</span>
+    <span class="n">difference</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="n">TDIFF</span><span class="p">]</span>
+
+    <span class="n">t_12um_inverse</span> <span class="o">=</span> <span class="o">-</span><span class="n">t_12um</span>
+
+    <span class="n">t_12um_inverse_smoothed</span> <span class="o">=</span> <span class="n">lowpass</span><span class="p">(</span><span class="n">t_12um_inverse</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+    <span class="n">difference_smoothed</span> <span class="o">=</span> <span class="n">lowpass</span><span class="p">(</span><span class="n">difference</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+
+    <span class="n">t_12um_inverse_signal</span> <span class="o">=</span> <span class="n">t_12um_inverse</span> <span class="o">-</span> <span class="n">t_12um_inverse_smoothed</span>
+    <span class="n">difference_signal</span> <span class="o">=</span> <span class="n">difference</span> <span class="o">-</span> <span class="n">difference_smoothed</span>
+
+    <span class="n">t_12um_inverse_stddev</span> <span class="o">=</span> <span class="n">lowpass</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">t_12um_inverse_signal</span><span class="p">)),</span> <span class="n">config</span><span class="p">)</span>
+    <span class="n">difference_stddev</span> <span class="o">=</span> <span class="n">lowpass</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">difference_signal</span><span class="p">)),</span> <span class="n">config</span><span class="p">)</span>
+
+    <span class="n">t_12um_inverse_normalized</span> <span class="o">=</span> <span class="n">t_12um_inverse_signal</span> <span class="o">/</span> <span class="p">(</span>
+        <span class="n">t_12um_inverse_stddev</span> <span class="o">+</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;stddev_epsilon&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">difference_normalized</span> <span class="o">=</span> <span class="n">difference_signal</span> <span class="o">/</span> <span class="p">(</span>
+        <span class="n">difference_stddev</span> <span class="o">+</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;stddev_epsilon&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="n">t_12um_inverse_clipped</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span>
+        <span class="n">t_12um_inverse_normalized</span><span class="p">,</span>
+        <span class="o">-</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;normalized_clip_magnitude&quot;</span><span class="p">],</span>
+        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;normalized_clip_magnitude&quot;</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="n">difference_clipped</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span>
+        <span class="n">difference_normalized</span><span class="p">,</span>
+        <span class="o">-</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;normalized_clip_magnitude&quot;</span><span class="p">],</span>
+        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;normalized_clip_magnitude&quot;</span><span class="p">],</span>
+    <span class="p">)</span>
+
+    <span class="n">normalized_sum</span> <span class="o">=</span> <span class="n">t_12um_inverse_clipped</span> <span class="o">+</span> <span class="n">difference_clipped</span>
+
+    <span class="k">if</span> <span class="s2">&quot;regional_gradient_max_scale&quot;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">regional_gradient_mask</span> <span class="o">=</span> <span class="n">get_regional_gradient_mask</span><span class="p">(</span>
+            <span class="n">t_12um</span><span class="p">,</span> <span class="n">t_12um_inverse_stddev</span><span class="p">,</span> <span class="n">config</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">regional_gradient_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">normalized_sum</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">normalized_sum</span><span class="p">,</span>
+        <span class="n">t_12um</span><span class="p">,</span>
+        <span class="n">t_12um_inverse_stddev</span><span class="p">,</span>
+        <span class="n">difference</span><span class="p">,</span>
+        <span class="n">regional_gradient_mask</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">mannstein_one_angle_mask</span><span class="p">(</span>
+    <span class="n">config</span><span class="p">,</span>
+    <span class="n">degrees</span><span class="p">,</span>
+    <span class="n">normalized_sum</span><span class="p">,</span>
+    <span class="n">t_12um</span><span class="p">,</span>
+    <span class="n">t_12um_inverse_stddev</span><span class="p">,</span>
+    <span class="n">difference</span><span class="p">,</span>
+    <span class="n">regional_gradient_mask</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">signal</span>
+
+    <span class="n">line_kernel</span> <span class="o">=</span> <span class="n">synthesize_line_kernel</span><span class="p">(</span><span class="n">degrees</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+    <span class="n">detected_lines</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">convolve2d</span><span class="p">(</span><span class="n">normalized_sum</span><span class="p">,</span> <span class="n">line_kernel</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+
+    <span class="c1"># `detected_lines` is the &#39;smallest&#39; image because it has had the most</span>
+    <span class="c1"># convolutions passed over it, and the np.nan values surrounding the</span>
+    <span class="c1"># finite pixels has increased in size due to that, so</span>
+    <span class="c1"># we mask off all the images to this smallest size.</span>
+
+    <span class="c1"># OD: Comment above does not reflect the code: the convolutions are</span>
+    <span class="c1">#     all in &quot;same&quot; mode, so the output is the same size as the input.</span>
+    <span class="n">normalized_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">detected_lines</span><span class="p">),</span> <span class="n">normalized_sum</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    <span class="n">difference</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">detected_lines</span><span class="p">),</span> <span class="n">difference</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    <span class="n">regional_gradient_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">detected_lines</span><span class="p">),</span> <span class="n">regional_gradient_mask</span><span class="p">,</span> <span class="kc">False</span>
+    <span class="p">)</span>
+
+    <span class="n">line_mask</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="n">detected_lines</span> <span class="o">&gt;</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;normalized_sum_threshold&quot;</span><span class="p">])</span>
+        <span class="o">&amp;</span> <span class="p">(</span><span class="n">normalized_sum</span> <span class="o">&gt;</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;normalized_sum_threshold&quot;</span><span class="p">])</span>
+        <span class="o">&amp;</span> <span class="p">(</span><span class="n">difference</span> <span class="o">&gt;</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;temperature_difference_threshold&quot;</span><span class="p">])</span>
+        <span class="o">&amp;</span> <span class="n">regional_gradient_mask</span>
+    <span class="p">)</span>
+
+    <span class="n">line_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">detected_lines</span><span class="p">),</span> <span class="n">line_mask</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">line_mask</span>
+
+
+<div class="viewcode-block" id="get_angles">
+<a class="viewcode-back" href="../../mannstein.html#simtrails.mannstein.get_angles">[docs]</a>
+<span class="k">def</span> <span class="nf">get_angles</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Gets the list of angles from a config.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      config: the config</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      the angles.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;num_line_kernels&quot;</span><span class="p">],</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="label_blobs">
+<a class="viewcode-back" href="../../mannstein.html#simtrails.mannstein.label_blobs">[docs]</a>
+<span class="k">def</span> <span class="nf">label_blobs</span><span class="p">(</span><span class="n">line_mask</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Given a mask, yields pixel coordinates of connected components.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      line_mask: 2d array, 1 when there is a contrail 0 otherwise.</span>
+<span class="sd">      config: params for what is an allowable contrail.</span>
+
+<span class="sd">    Yields:</span>
+<span class="sd">      Tuple of (row_coordinates, col_coordinates).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">scipy.ndimage</span> <span class="kn">import</span> <span class="n">measurements</span>
+
+    <span class="c1"># measurements.label interprets np.nan as different from zero, so it thinks</span>
+    <span class="c1"># nan&#39;s are contrail pixels. Replace all nans with zeros so we only label</span>
+    <span class="c1"># the non-nan pixels as contrails</span>
+    <span class="n">line_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">line_mask</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">line_mask</span><span class="p">)</span>
+    <span class="n">labels</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">measurements</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="n">line_mask</span><span class="p">,</span> <span class="n">structure</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))</span>
+    <span class="n">bincount</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+    <span class="n">bincount</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># OD: ignore the background label</span>
+    <span class="p">(</span><span class="n">right_sized_labels</span><span class="p">,)</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="n">bincount</span> <span class="o">&gt;</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;min_contrail_num_pixels&quot;</span><span class="p">])</span>
+        <span class="o">&amp;</span> <span class="p">(</span><span class="n">bincount</span> <span class="o">&lt;</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;max_contrail_num_pixels&quot;</span><span class="p">])</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">right_sized_labels</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="p">(</span><span class="n">labels</span> <span class="o">==</span> <span class="n">label</span><span class="p">)</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">linear_fit</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">linear_model</span>
+
+    <span class="n">train_ys</span> <span class="o">=</span> <span class="n">ys</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">train_xs</span> <span class="o">=</span> <span class="n">xs</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">regression</span> <span class="o">=</span> <span class="n">linear_model</span><span class="o">.</span><span class="n">LinearRegression</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_xs</span><span class="p">,</span> <span class="n">train_ys</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">regression</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">train_xs</span><span class="p">,</span> <span class="n">train_ys</span><span class="p">),</span>
+        <span class="n">regression</span><span class="o">.</span><span class="n">coef_</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">regression</span><span class="o">.</span><span class="n">intercept_</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="linearity_score">
+<a class="viewcode-back" href="../../mannstein.html#simtrails.mannstein.linearity_score">[docs]</a>
+<span class="k">def</span> <span class="nf">linearity_score</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">slope</span><span class="p">,</span> <span class="n">intercept</span><span class="p">,</span> <span class="n">treat_horizontal</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate the &quot;linearity score&quot; of a set of points relative to a line.</span>
+<span class="sd">    OD: Original addition to combat the problem of r-squared omitting lines</span>
+<span class="sd">        that are aligned with the x or y axis.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">simtrails.misc.geometry</span> <span class="kn">import</span> <span class="p">(</span>
+        <span class="n">perpendicular_distance_to_line</span><span class="p">,</span>
+        <span class="n">perpendicular_line</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">perp_res</span> <span class="o">=</span> <span class="n">perpendicular_distance_to_line</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">slope</span><span class="p">,</span> <span class="n">intercept</span><span class="p">)</span>
+
+    <span class="c1"># early exit if the line perfectly vertical or horizontal</span>
+    <span class="k">if</span> <span class="n">slope</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">perp_res</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">xs</span> <span class="o">-</span> <span class="n">xs</span><span class="o">.</span><span class="n">mean</span><span class="p">()))</span>
+
+    <span class="k">if</span> <span class="n">treat_horizontal</span><span class="p">:</span>
+        <span class="n">perp_slope</span><span class="p">,</span> <span class="n">perp_intercept</span> <span class="o">=</span> <span class="n">perpendicular_line</span><span class="p">(</span><span class="n">slope</span><span class="p">,</span> <span class="n">intercept</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">xs</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">perp_slope</span><span class="p">,</span> <span class="n">perp_intercept</span> <span class="o">=</span> <span class="n">perpendicular_line</span><span class="p">(</span><span class="n">slope</span><span class="p">,</span> <span class="n">intercept</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">ys</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+
+    <span class="n">para_res</span> <span class="o">=</span> <span class="n">perpendicular_distance_to_line</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">perp_slope</span><span class="p">,</span> <span class="n">perp_intercept</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">perp_res</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">para_res</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="linear_and_long_enough">
+<a class="viewcode-back" href="../../mannstein.html#simtrails.mannstein.linear_and_long_enough">[docs]</a>
+<span class="k">def</span> <span class="nf">linear_and_long_enough</span><span class="p">(</span><span class="n">ys</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">avg_size</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Decides if a connected component is linear and long enough for a contrail.</span>
+
+<span class="sd">    Does this by performing a linear fit to all the passed in pixels. Note that</span>
+<span class="sd">    if the pixels are a vertically-oriented rectangle, the &#39;best fit line&#39; will</span>
+<span class="sd">    have a slope of infinity, but your average linear fitter really doesn&#39;t like</span>
+<span class="sd">    making an infinite slope. So in this method we decide whether to use</span>
+<span class="sd">    x or y as the independent variable, in such a way as to minimize the slope</span>
+<span class="sd">    before doing any fitting (e.g. for mostly vertical clusters, we fit</span>
+<span class="sd">    x = f(y), for mostly horizontal we fit y = f(x).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      ys: pixel row coordinates</span>
+<span class="sd">      xs: pixel col coordinates</span>
+<span class="sd">      config: Dict containing params for what makes a contrail</span>
+<span class="sd">      avg_size: Below we handle top/bottom or left/right endpoints separately,</span>
+<span class="sd">        based on the slope. To reduce noise from extremal pixel locations, take</span>
+<span class="sd">        the average of a small number of extremal pixels as the endpoint.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      True if the pixel blob meets config-defined linearity and size thresholds.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pixel_length</span><span class="p">,</span> <span class="n">score</span> <span class="o">=</span> <span class="n">get_pixel_length</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">avg_size</span><span class="o">=</span><span class="n">avg_size</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">score</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;min_linear_regression_r_score&quot;</span><span class="p">])</span>
+        <span class="ow">and</span> <span class="n">pixel_length</span> <span class="o">&gt;</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;min_contrail_pixel_length&quot;</span><span class="p">]</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">get_pixel_length</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">avg_size</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+    <span class="n">sorted_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">ys</span><span class="p">)</span>
+    <span class="n">y1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">ys</span><span class="p">[</span><span class="n">sorted_indices</span><span class="p">][:</span><span class="n">avg_size</span><span class="p">])</span>
+    <span class="n">y2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">ys</span><span class="p">[</span><span class="n">sorted_indices</span><span class="p">][</span><span class="o">-</span><span class="n">avg_size</span><span class="p">:])</span>
+    <span class="n">sorted_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
+    <span class="n">x1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">xs</span><span class="p">[</span><span class="n">sorted_indices</span><span class="p">][:</span><span class="n">avg_size</span><span class="p">])</span>
+    <span class="n">x2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">xs</span><span class="p">[</span><span class="n">sorted_indices</span><span class="p">][</span><span class="o">-</span><span class="n">avg_size</span><span class="p">:])</span>
+
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">x1</span> <span class="o">-</span> <span class="n">x2</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">abs</span><span class="p">(</span><span class="n">y1</span> <span class="o">-</span> <span class="n">y2</span><span class="p">):</span>
+        <span class="c1"># This is a horizontal-ish line; use x as independent variable.</span>
+        <span class="n">score</span><span class="p">,</span> <span class="n">slope</span><span class="p">,</span> <span class="n">intercept</span> <span class="o">=</span> <span class="n">linear_fit</span><span class="p">(</span><span class="n">xs</span><span class="o">=</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="o">=</span><span class="n">ys</span><span class="p">)</span>
+        <span class="c1"># OD: replace r-squared with linearity score</span>
+        <span class="n">score</span> <span class="o">=</span> <span class="n">linearity_score</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">slope</span><span class="p">,</span> <span class="n">intercept</span><span class="p">,</span> <span class="n">treat_horizontal</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">y1</span> <span class="o">=</span> <span class="n">x1</span> <span class="o">*</span> <span class="n">slope</span> <span class="o">+</span> <span class="n">intercept</span>
+        <span class="n">y2</span> <span class="o">=</span> <span class="n">x2</span> <span class="o">*</span> <span class="n">slope</span> <span class="o">+</span> <span class="n">intercept</span>
+        <span class="n">pixel_length</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">x1</span> <span class="o">-</span> <span class="n">x2</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">y1</span> <span class="o">-</span> <span class="n">y2</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># This is a vertical-ish line; use y as independent variable.</span>
+        <span class="n">score</span><span class="p">,</span> <span class="n">slope</span><span class="p">,</span> <span class="n">intercept</span> <span class="o">=</span> <span class="n">linear_fit</span><span class="p">(</span><span class="n">xs</span><span class="o">=</span><span class="n">ys</span><span class="p">,</span> <span class="n">ys</span><span class="o">=</span><span class="n">xs</span><span class="p">)</span>
+        <span class="c1"># OD: replace r-squared with linearity score</span>
+        <span class="n">score</span> <span class="o">=</span> <span class="n">linearity_score</span><span class="p">(</span><span class="n">ys</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">slope</span><span class="p">,</span> <span class="n">intercept</span><span class="p">,</span> <span class="n">treat_horizontal</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">x1</span> <span class="o">=</span> <span class="n">y1</span> <span class="o">*</span> <span class="n">slope</span> <span class="o">+</span> <span class="n">intercept</span>
+        <span class="n">x2</span> <span class="o">=</span> <span class="n">y2</span> <span class="o">*</span> <span class="n">slope</span> <span class="o">+</span> <span class="n">intercept</span>
+        <span class="n">pixel_length</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">y1</span> <span class="o">-</span> <span class="n">y2</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">x1</span> <span class="o">-</span> <span class="n">x2</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">pixel_length</span><span class="p">,</span> <span class="n">score</span>
+
+
+<div class="viewcode-block" id="find_contrail_pixels">
+<a class="viewcode-back" href="../../mannstein.html#simtrails.mannstein.find_contrail_pixels">[docs]</a>
+<span class="k">def</span> <span class="nf">find_contrail_pixels</span><span class="p">(</span><span class="n">line_mask</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns lat/lng endpoints of all contrails in line_mask.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      line_mask: np.array, binary mask of where contrail lines were detected.</span>
+<span class="sd">      config: dict, algorithm configuration parameters (eg thresholds).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      List of (row pixel coordinates, col pixel coordinates) tuples.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">contrail_pixel_coords</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="ow">in</span> <span class="n">label_blobs</span><span class="p">(</span><span class="n">line_mask</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">linear_and_long_enough</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">avg_size</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">contrail_pixel_coords</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">contrail_pixel_coords</span></div>
+
+
+
+<div class="viewcode-block" id="mannstein_contrail_mask">
+<a class="viewcode-back" href="../../mannstein.html#simtrails.mannstein.mannstein_contrail_mask">[docs]</a>
+<span class="k">def</span> <span class="nf">mannstein_contrail_mask</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">pbar</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Mannstein et al contrail detection algorithm.</span>
+
+<span class="sd">    See &quot;Operational detection of contrails from NOAA-AVHRR-data&quot;,</span>
+<span class="sd">    International Journal of Remote Sensing, 1999:</span>
+<span class="sd">    https://www.tandfonline.com/doi/abs/10.1080/014311699212650</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      features: dict containing 11um-12um and 12um brightness temperatures.</span>
+<span class="sd">      config: algorithm configuration parameters (eg thresholds).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Mask, pixels identified as contrails are 1 and everywhere else is 0.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">contrail_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">features</span><span class="p">[</span><span class="n">TDIFF</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">mannstein_preprocessing</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">degrees</span> <span class="ow">in</span> <span class="n">get_angles</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+        <span class="n">line_mask</span> <span class="o">=</span> <span class="n">mannstein_one_angle_mask</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">degrees</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="ow">in</span> <span class="n">find_contrail_pixels</span><span class="p">(</span><span class="n">line_mask</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+            <span class="n">contrail_mask</span><span class="p">[</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">pbar</span><span class="p">:</span>
+        <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
+    <span class="c1"># dont allow the very edges to be contrails.... this is a bit of a hack and is needed for cirrus background</span>
+    <span class="n">contrail_mask</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">contrail_mask</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">contrail_mask</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">contrail_mask</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">return</span> <span class="n">contrail_mask</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Oliver Driver.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
